@@ -269,6 +269,110 @@ async function gerarPDF(e) {
 
     doc.save(`laudo_${e.id}.pdf`);
 }
+    /* ============================
+   PDF — GERAÇÃO LOCAL (NOVA)
+============================ */
+async function gerarPDF(e) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+
+    let y = 20;
+
+    // Título
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(20);
+    doc.text("LAUDO DE ENSAIO DIELÉTRICO", 105, y, { align: "center" });
+    y += 15;
+
+    // ============================
+    // FUNÇÃO PARA QUADROS
+    // ============================
+    function bloco(titulo, linhas) {
+        doc.setFontSize(14);
+        doc.setFont("Helvetica", "bold");
+        doc.text(titulo, 15, y);
+        y += 7;
+
+        doc.setFont("Helvetica", "normal");
+        doc.setFontSize(12);
+
+        linhas.forEach(l => {
+            doc.text(l, 15, y);
+            y += 7;
+
+            if (y > 275) {  
+                doc.addPage();
+                y = 20;
+            }
+        });
+
+        y += 4;
+    }
+
+    // ============================
+    // DADOS DO EQUIPAMENTO
+    // ============================
+    bloco("DADOS DO EQUIPAMENTO", [
+        `Código Inicial: ${e.cod_inicial}`,
+        `Código Final: ${e.cod_final}`,
+        `Elemento: ${e.elementos}`,
+        `Equipamento: ${e.equipamentos}`
+    ]);
+
+    // ============================
+    // INFORMAÇÕES DO ENSAIO
+    // ============================
+    bloco("INFORMAÇÕES DO ENSAIO", [
+        `Tipo de Ensaio: ${e.tipo_ensaio}`,
+        `Norma Aplicada: ${e.norma}`,
+        `Corrente de Fuga (µA): ${e.corrente_fuga}`,
+        `Resultado Final: ${e.resultado}`,
+        `Número de Aprovação: ${e.aprovacao ?? "-"}`,
+        `Técnico Responsável: ${e.nome}`
+    ]);
+
+    // ============================
+    // OBSERVAÇÕES / TEXTO OFICIAL
+    // ============================
+    bloco("OBSERVAÇÃO", [
+        "Os EPI’s e EPC’s que estiverem com o código de rastreio e o ano",
+        "de ensaio referente ao laudo técnico estão aprovados para serem",
+        "utilizados em campo.",
+        "",
+        "INFORMAÇÕES DO ENSAIO",
+        "Ensaio de tensão aplicada: Verifica se o equipamento suporta a",
+        "tensão de ensaio de corrente alternada conforme sua classe de",
+        "isolação sem ocorrer rompimento da rigidez dielétrica (flashover)",
+        "ou exceder correntes máximas admissíveis.",
+        "ART do Ensaio Dielétrico: -",
+        "",
+        "EQUIPAMENTOS UTILIZADOS",
+        "Testador de Alta Tensão Alternada EEAT, modelo",
+        "AT120050CADMT2SAURS232 (120 kVCA / 100 mA).",
+        "Certificado de Calibração Nº Co315225 – Fevereiro/2025.",
+        "Aprovado pela empresa E.E.A.T Indústria e Comércio LTDA.",
+        "",
+        "CONDIÇÕES AMBIENTAIS",
+        "Temperatura: 30 ºC",
+        "Umidade relativa: 50%",
+        "Pressão atmosférica: 970 mbar",
+        "",
+        "OBSERVAÇÕES GERAIS",
+        "Incerteza na medição de tensão: ± 0,05%",
+        "Incerteza na medição de corrente: ± 0,01%"
+    ]);
+
+    // ============================
+    // ASSINATURA
+    // ============================
+    y += 15;
+    doc.text("_____________________________________________", 15, y);
+    y += 6;
+    doc.text("Responsável Técnico", 15, y);
+
+    doc.save(`laudo_${e.id}.pdf`);
+}
+
 
 carregar();
 </script>
