@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <title>Ensaios Dielétricos - Consulta</title>
 
+<!-- jsPDF + AutoTable -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
 <style>
     body {
         font-family: "Segoe UI", Arial;
@@ -25,14 +29,14 @@
         color: #003d66;
     }
 
-    /* Filtros */
     .filtros {
         display: flex;
         gap: 10px;
         margin-bottom: 15px;
     }
 
-    .filtros input, .filtros select {
+    .filtros input,
+    .filtros select {
         padding: 10px;
         font-size: 15px;
         border-radius: 6px;
@@ -77,7 +81,9 @@
         color: #fff;
     }
 
-    .btn-primary:hover { background: #005f99; }
+    .btn-primary:hover {
+        background: #005f99;
+    }
 
     .modal {
         position: fixed;
@@ -98,8 +104,8 @@
         box-shadow: 0 5px 20px rgba(0,0,0,.2);
     }
 </style>
-
 </head>
+
 <body>
 
 <div class="container">
@@ -131,7 +137,6 @@
         <tbody></tbody>
     </table>
 </div>
-
 
 <!-- MODAL -->
 <div class="modal" id="modal">
@@ -169,24 +174,20 @@ function renderizar(lista) {
             <td>${e.resultado}</td>
             <td>${e.aprovacao ?? '-'}</td>
             <td>
-                ${
-                    e.aprovacao
-                    ? `<a href="${API}/gerar-pdf?id=${e.id}" download>
-                        <button class='btn btn-primary'>Baixar PDF</button>
-                       </a>`
-                    : `<button class='btn btn-primary' onclick="abrirModal(${e.id})">Gerar PDF</button>`
-                }
+                <button class='btn btn-primary' onclick='gerarPDF(${JSON.stringify(e)})'>
+                    Gerar PDF
+                </button>
             </td>
         </tr>`;
     });
 }
 
-/* FILTROS + BUSCA INTELIGENTE */
+/* FILTROS */
 function aplicarFiltros() {
-    let nome = document.getElementById("filtroNome").value.toLowerCase();
-    let eqp = document.getElementById("filtroEquipamento").value.toLowerCase();
-    let aprov = document.getElementById("filtroAprovacao").value;
-    let geral = document.getElementById("buscaGeral").value.toLowerCase();
+    let nome = filtroNome.value.toLowerCase();
+    let eqp = filtroEquipamento.value.toLowerCase();
+    let aprov = filtroAprovacao.value;
+    let geral = buscaGeral.value.toLowerCase();
 
     let filtrados = ensaiosOriginais.filter(e => {
         return (
@@ -194,11 +195,9 @@ function aplicarFiltros() {
             e.equipamentos.toLowerCase().includes(eqp) &&
             (aprov === "" ||
              (aprov === "-" && !e.aprovacao) ||
-             (aprov === "ap" && e.aprovacao)
-            ) &&
-            (geral === "" || 
-                JSON.stringify(e).toLowerCase().includes(geral)
-            )
+             (aprov === "ap" && e.aprovacao)) &&
+            (geral === "" ||
+             JSON.stringify(e).toLowerCase().includes(geral))
         );
     });
 
@@ -210,13 +209,16 @@ document.querySelectorAll("#filtroNome, #filtroEquipamento, #filtroAprovacao, #b
 
 function abrirModal(id) {
     ensaioSelecionado = id;
-    document.getElementById("modal").style.display = "flex";
+    modal.style.display = "flex";
 }
 
 function fecharModal() {
-    document.getElementById("modal").style.display = "none";
+    modal.style.display = "none";
 }
 
+/* ============================
+   SALVAR APROVAÇÃO
+============================ */
 async function salvarAprovacao() {
     const aprov = document.getElementById("numeroAprovacao").value;
 
@@ -228,6 +230,44 @@ async function salvarAprovacao() {
 
     fecharModal();
     carregar();
+}
+
+/* ============================
+   PDF — GERAÇÃO LOCAL
+============================ */
+async function gerarPDF(e) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    doc.setFontSize(18);
+    doc.text("LAUDO DE ENSAIO DIELÉTRICO", 15, 20);
+
+    doc.setFontSize(12);
+
+    doc.autoTable({
+        startY: 30,
+        theme: "grid",
+        head: [["Campo", "Valor"]],
+        body: [
+            ["ID", e.id],
+            ["Nome", e.nome],
+            ["E-mail", e.email],
+            ["Data", e.data],
+            ["Departamento", e.departamento],
+            ["Regional", e.regional],
+            ["Código Inicial", e.cod_inicial],
+            ["Código Final", e.cod_final],
+            ["Elementos", e.elementos],
+            ["Equipamentos", e.equipamentos],
+            ["Tipo de Ensaio", e.tipo_ensaio],
+            ["Norma Aplicada", e.norma],
+            ["Corrente de Fuga (µA)", e.corrente_fuga],
+            ["Resultado Final", e.resultado],
+            ["Aprovação", e.aprovacao ?? "-"]
+        ]
+    });
+
+    doc.save(`laudo_${e.id}.pdf`);
 }
 
 carregar();
