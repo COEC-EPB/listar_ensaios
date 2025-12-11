@@ -379,22 +379,29 @@ async function gerarPDF(e) {
     });
 
     /* ===================================
-       ASSINATURA — RODAPÉ (CENTRALIZADO)
-    =================================== */
-    finalY += 16;
+   ASSINATURA — RODAPÉ (CENTRALIZADO)
+=================================== */
 
-    doc.setFont("Helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text("__________________________________________", 105, finalY, { align: "center" });
+// Altura máxima utilizável antes da quebra (A4 → ~280mm)
+const pageHeight = doc.internal.pageSize.height;
 
-    finalY += 6;
-    doc.setFont("Helvetica", "bold");
-    doc.text("Wesley Fernandes de Souza", 105, finalY, { align: "center" });
+if (finalY > pageHeight - 30) {
+    doc.addPage();
+    finalY = 20;
+}
 
-    finalY += 5;
-    doc.setFont("Helvetica", "normal");
-    doc.setFontSize(9);
-    doc.text("Responsável Técnico – CREA-PB: 1605187852", 105, finalY, { align: "center" });
+doc.setFont("Helvetica", "normal");
+doc.setFontSize(10);
+doc.text("__________________________________________", 105, finalY, { align: "center" });
+
+finalY += 6;
+doc.setFont("Helvetica", "bold");
+doc.text("Wesley Fernandes de Souza", 105, finalY, { align: "center" });
+
+finalY += 5;
+doc.setFont("Helvetica", "normal");
+doc.setFontSize(9);
+doc.text("Responsável Técnico – CREA-PB: 1605187852", 105, finalY, { align: "center" });
 
     /* ===================================
        SALVAR
