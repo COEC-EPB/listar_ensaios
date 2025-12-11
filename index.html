@@ -6,60 +6,63 @@
 
 <style>
     body {
-        font-family: "Segoe UI", Arial, sans-serif;
+        font-family: "Segoe UI", Arial;
         background: #eef3f8;
         padding: 30px;
-        color: #333;
     }
 
-    h2 {
-        font-size: 26px;
-        margin-bottom: 20px;
-        color: #003d66;
-        font-weight: 600;
-    }
-
-    /* Container centralizado */
     .container {
-        max-width: 1200px;
+        max-width: 1300px;
         margin: auto;
         background: #fff;
         padding: 25px;
         border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        box-shadow: 0 4px 20px rgba(0,0,0,.08);
     }
 
-    /* Tabela */
+    h2 {
+        margin-bottom: 20px;
+        color: #003d66;
+    }
+
+    /* Filtros */
+    .filtros {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .filtros input, .filtros select {
+        padding: 10px;
+        font-size: 15px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        width: 100%;
+    }
+
     table {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 15px;
         border-radius: 12px;
         overflow: hidden;
     }
 
-    thead tr {
+    th {
         background: #0066a6;
         color: #fff;
-    }
-
-    th {
         padding: 12px;
-        font-size: 15px;
         text-align: left;
     }
 
     td {
         padding: 12px;
-        font-size: 15px;
         border-bottom: 1px solid #ddd;
     }
 
-    tbody tr:hover {
+    tr:hover {
         background: #f2f8fc;
     }
 
-    /* Botões */
     .btn {
         padding: 7px 14px;
         border: none;
@@ -74,29 +77,16 @@
         color: #fff;
     }
 
-    .btn-primary:hover {
-        background: #005f99;
-    }
+    .btn-primary:hover { background: #005f99; }
 
-    .btn-secondary {
-        background: #999;
-        color: white;
-    }
-
-    .btn-secondary:hover {
-        background: #777;
-    }
-
-    /* Modal */
     .modal {
         position: fixed;
         top: 0; left: 0;
         width: 100%; height: 100%;
-        background: rgba(0,0,0,0.5);
+        background: rgba(0,0,0,.5);
         display: none;
         justify-content: center;
         align-items: center;
-        z-index: 999;
     }
 
     .modal-content {
@@ -107,16 +97,6 @@
         text-align: center;
         box-shadow: 0 5px 20px rgba(0,0,0,.2);
     }
-
-    .modal-content input {
-        width: 100%;
-        padding: 10px;
-        font-size: 16px;
-        border-radius: 6px;
-        border: 1px solid #ccc;
-        margin-top: 10px;
-    }
-
 </style>
 
 </head>
@@ -125,15 +105,27 @@
 <div class="container">
     <h2>Ensaios Dielétricos Registrados</h2>
 
+    <!-- FILTROS -->
+    <div class="filtros">
+        <input id="filtroNome" placeholder="Filtrar por nome">
+        <input id="filtroEquipamento" placeholder="Filtrar por equipamento">
+        <select id="filtroAprovacao">
+            <option value="">Aprovação (todos)</option>
+            <option value="-">Sem aprovação</option>
+            <option value="ap">Aprovados</option>
+        </select>
+        <input id="buscaGeral" placeholder="Busca inteligente (tudo)">
+    </div>
+
     <table id="tabela">
         <thead>
             <tr>
-                <th style="width: 60px;">ID</th>
-                <th style="width: 200px;">Nome</th>
+                <th>ID</th>
+                <th>Nome</th>
                 <th>Equipamentos</th>
-                <th style="width: 120px;">Resultado</th>
-                <th style="width: 140px;">Aprovação</th>
-                <th style="width: 150px;">Ação</th>
+                <th>Resultado</th>
+                <th>Aprovação</th>
+                <th>Ação</th>
             </tr>
         </thead>
         <tbody></tbody>
@@ -141,30 +133,34 @@
 </div>
 
 
-<!-- MODAL APROVAÇÃO -->
+<!-- MODAL -->
 <div class="modal" id="modal">
-  <div class="modal-content">
-    <h3>Nº de Aprovação</h3>
-    <input id="numeroAprovacao" placeholder="000/2025">
-    <br><br>
-    <button class="btn btn-primary" onclick="salvarAprovacao()">Salvar</button>
-    <button class="btn btn-secondary" onclick="fecharModal()" style="margin-left:5px">Cancelar</button>
-  </div>
+    <div class="modal-content">
+        <h3>Nº de Aprovação</h3>
+        <input id="numeroAprovacao" placeholder="000/2025">
+        <br><br>
+        <button class="btn btn-primary" onclick="salvarAprovacao()">Salvar</button>
+        <button class="btn" onclick="fecharModal()">Cancelar</button>
+    </div>
 </div>
 
-
 <script>
+let ensaiosOriginais = [];
 let ensaioSelecionado = null;
+
 const API = "https://ensai-dieletrico.pedro-fillype.workers.dev";
 
 async function carregar() {
     const r = await fetch(`${API}/listar-ensaios`);
-    const ensaios = await r.json();
+    ensaiosOriginais = await r.json();
+    renderizar(ensaiosOriginais);
+}
 
+function renderizar(lista) {
     const tbody = document.querySelector("#tabela tbody");
     tbody.innerHTML = "";
 
-    ensaios.forEach(e => {
+    lista.forEach(e => {
         tbody.innerHTML += `
         <tr>
             <td>${e.id}</td>
@@ -185,6 +181,33 @@ async function carregar() {
     });
 }
 
+/* FILTROS + BUSCA INTELIGENTE */
+function aplicarFiltros() {
+    let nome = document.getElementById("filtroNome").value.toLowerCase();
+    let eqp = document.getElementById("filtroEquipamento").value.toLowerCase();
+    let aprov = document.getElementById("filtroAprovacao").value;
+    let geral = document.getElementById("buscaGeral").value.toLowerCase();
+
+    let filtrados = ensaiosOriginais.filter(e => {
+        return (
+            e.nome.toLowerCase().includes(nome) &&
+            e.equipamentos.toLowerCase().includes(eqp) &&
+            (aprov === "" ||
+             (aprov === "-" && !e.aprovacao) ||
+             (aprov === "ap" && e.aprovacao)
+            ) &&
+            (geral === "" || 
+                JSON.stringify(e).toLowerCase().includes(geral)
+            )
+        );
+    });
+
+    renderizar(filtrados);
+}
+
+document.querySelectorAll("#filtroNome, #filtroEquipamento, #filtroAprovacao, #buscaGeral")
+.forEach(el => el.addEventListener("input", aplicarFiltros));
+
 function abrirModal(id) {
     ensaioSelecionado = id;
     document.getElementById("modal").style.display = "flex";
@@ -199,7 +222,7 @@ async function salvarAprovacao() {
 
     await fetch(`${API}/salvar-aprovacao`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type":"application/json"},
         body: JSON.stringify({ id: ensaioSelecionado, aprovacao: aprov })
     });
 
