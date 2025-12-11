@@ -1,127 +1,141 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Registros de Ensaio Dielétrico</title>
+<title>Ensaios Dielétricos - Consulta</title>
 
 <style>
-    body {
-        background: #eef3f6;
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 20px;
-    }
-    h2 {
-        text-align: center;
-        color: #0079A6;
-        margin-bottom: 25px;
-    }
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        background: white;
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    th, td {
-        padding: 12px;
-        border-bottom: 1px solid #ddd;
-        font-size: 14px;
-    }
-    th {
-        background: #0097CE;
-        color: white;
-        text-align: left;
-    }
-    tr:hover {
-        background: #f1f7fc;
-    }
-    button {
-        padding: 8px 14px;
-        background: #0097CE;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 14px;
-    }
-    button:hover {
-        background: #0079A6;
-    }
+body {
+    font-family: Arial;
+    background: #f4f7fc;
+    padding: 20px;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+}
+th, td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+th {
+    background: #0077b6;
+    color: white;
+}
+button {
+    padding: 6px 12px;
+    background: #0077b6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+button:hover {
+    background: #005f87;
+}
+.modal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,.4);
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px;
+}
 </style>
+
 </head>
 <body>
 
-<h2>Registros de Ensaio Dielétrico</h2>
+<h2>Ensaios Dielétricos Registrados</h2>
 
 <table id="tabela">
     <thead>
         <tr>
             <th>ID</th>
-            <th>Data</th>
             <th>Nome</th>
-            <th>Equipamento</th>
-            <th>Códigos</th>
+            <th>Equipamentos</th>
             <th>Resultado</th>
-            <th>PDF</th>
+            <th>Aprovação</th>
+            <th>Ação</th>
         </tr>
     </thead>
     <tbody></tbody>
 </table>
 
+
+<!-- MODAL APROVAÇÃO -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <h3>Nº de Aprovação</h3>
+    <input id="numeroAprovacao" style="width:100%;padding:8px" placeholder="000/2025">
+    <br><br>
+    <button onclick="salvarAprovacao()">Salvar</button>
+    <button onclick="fecharModal()" style="background:#999;margin-left:5px">Cancelar</button>
+  </div>
+</div>
+
 <script>
-async function carregarRegistros() {
-    const res = await fetch("https://ensai-dieletrico.pedro-fillype.workers.dev/listar");
-    const dados = await res.json();
+let ensaioSelecionado = null;
+const API = "https://ensai-dieletrico.pedro-fillype.workers.dev";
+
+async function carregar() {
+    const r = await fetch(`${API}/listar-ensaios`);
+    const ensaios = await r.json();
 
     const tbody = document.querySelector("#tabela tbody");
     tbody.innerHTML = "";
 
-    dados.forEach(item => {
-        const tr = document.createElement("tr");
-
-        tr.innerHTML = `
-            <td>${item.id}</td>
-            <td>${item.data}</td>
-            <td>${item.nome}</td>
-            <td>${item.equipamentos}</td>
-            <td>${item.codigo_inicial} → ${item.codigo_final}</td>
-            <td>${item.resultado}</td>
+    ensaios.forEach(e => {
+        tbody.innerHTML += `
+        <tr>
+            <td>${e.id}</td>
+            <td>${e.nome}</td>
+            <td>${e.equipamentos}</td>
+            <td>${e.resultado}</td>
+            <td>${e.aprovacao ?? '-'}</td>
             <td>
-                <button onclick="gerarPDF(${item.id})">Gerar PDF</button>
+                ${e.aprovacao 
+                    ? `<a href="${API}/gerar-pdf?id=${e.id}" download><button>Download PDF</button></a>`
+                    : `<button onclick="abrirModal(${e.id})">Gerar PDF</button>`
+                }
             </td>
-        `;
-
-        tbody.appendChild(tr);
+        </tr>`;
     });
 }
 
-async function gerarPDF(id) {
-    const aprovacao = prompt("Digite o Número de Aprovação:");
+function abrirModal(id) {
+    ensaioSelecionado = id;
+    document.getElementById("modal").style.display = "flex";
+}
 
-    if (!aprovacao) {
-        alert("Número de aprovação obrigatório!");
-        return;
-    }
+function fecharModal() {
+    document.getElementById("modal").style.display = "none";
+}
 
-    const res = await fetch("https://ensai-dieletrico.pedro-fillype.workers.dev/gerar-pdf", {
+async function salvarAprovacao() {
+    const aprov = document.getElementById("numeroAprovacao").value;
+
+    await fetch(`${API}/salvar-aprovacao`, {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ id, aprovacao })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: ensaioSelecionado, aprovacao: aprov })
     });
 
-    const json = await res.json();
-
-    if (json.url) {
-        window.open(json.url, "_blank");
-    } else {
-        alert("Erro ao gerar PDF");
-    }
+    fecharModal();
+    carregar();
 }
 
-carregarRegistros();
+carregar();
 </script>
 
 </body>
