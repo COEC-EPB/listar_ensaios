@@ -232,134 +232,136 @@ async function salvarAprovacao() {
     carregar();
 }
 
-/* ============================
-   PDF — GERAÇÃO LOCAL (VERSÃO PRO)
-============================ */
 async function gerarPDF(e) {
-
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const doc = new jsPDF();
 
-    let y = 20;
-
-    // ============================
-    // TÍTULO CENTRALIZADO
-    // ============================
+    /* ============================
+       TÍTULO CENTRALIZADO
+    ============================ */
+    doc.setFontSize(16);
     doc.setFont("Helvetica", "bold");
-    doc.setFontSize(18);
-    doc.text("LAUDO DE ENSAIO DIELÉTRICO", 105, y, { align: "center" });
-    y += 12;
-
-
-    /* ---------------------------------------------------------
-        FUNÇÃO PARA CAIXAS (borda + título + conteúdo)
-    ---------------------------------------------------------- */
-    function caixa(titulo, linhas) {
-        doc.setFontSize(13);
-        doc.setFont("Helvetica", "bold");
-
-        const startY = y;
-        const boxWidth = 180;
-        let boxHeight = 8 + (linhas.length * 6);
-
-        // Título
-        doc.text(titulo, 15, y + 6);
-        y += 10;
-
-        // Conteúdo
-        doc.setFontSize(11);
-        doc.setFont("Helvetica", "normal");
-
-        linhas.forEach(l => {
-            doc.text(l, 20, y);
-            y += 6;
-        });
-
-        // desenha borda
-        doc.rect(10, startY, boxWidth, boxHeight);
-
-        y += 5; // espaço após caixa
-    }
-
+    doc.text("LAUDO DE ENSAIO DIELÉTRICO", 105, 15, { align: "center" });
 
     /* ============================
-       CAIXA 1 — DADOS DO EQUIPAMENTO
-    ============================= */
-    caixa("DADOS DO EQUIPAMENTO", [
-        `Código Inicial: ${e.cod_inicial}`,
-        `Código Final: ${e.cod_final}`,
-        `Elemento: ${e.elementos}`,
-        `Equipamento: ${e.equipamentos}`
-    ]);
+       TABELA PRINCIPAL DO LAUDO
+    ============================ */
+    doc.setFontSize(11);
+    doc.setFont("Helvetica", "normal");
 
-    /* ============================
-       CAIXA 2 — INFORMAÇÕES DO ENSAIO
-    ============================= */
-    caixa("INFORMAÇÕES DO ENSAIO", [
-        `Tipo de Ensaio: ${e.tipo_ensaio}`,
-        `Norma Aplicada: ${e.norma}`,
-        `Corrente de Fuga (µA): ${e.corrente_fuga}`,
-        `Resultado Final: ${e.resultado}`,
-        `Número de Aprovação: ${e.aprovacao ?? "-"}`,
-        `Técnico Responsável: ${e.nome}`
-    ]);
-
-    /* ============================
-       CAIXA 3 — OBSERVAÇÕES (menor + negrito)
-    ============================= */
-    doc.setFont("Helvetica", "bold");
-    doc.setFontSize(12);
-    doc.text("OBSERVAÇÕES", 15, y);
-    y += 5;
-
-    const obs = [
-        "Os EPI’s e EPC’s que estiverem com o código de rastreio e o ano de ensaio",
-        "referente ao laudo técnico estão aprovados para serem utilizados em campo.",
-        "",
-        "INFORMAÇÕES DO ENSAIO",
-        "Ensaio de tensão aplicada: verifica se o equipamento suporta a tensão de",
-        "ensaio de corrente alternada conforme sua classe de isolação, sem ocorrer",
-        "rompimento da rigidez dielétrica (flashover) ou exceder correntes máximas.",
-        "ART do Ensaio Dielétrico: -",
-        "",
-        "EQUIPAMENTOS UTILIZADOS",
-        "Testador de Alta Tensão Alternada EEAT, modelo AT120050CADMT2SAURS232",
-        "120kVCA / 100mA. Certificado de Calibração Nº Co315225 – Fev/2025.",
-        "",
-        "CONDIÇÕES AMBIENTAIS",
-        "Temperatura: 30 ºC    |    Umidade: 50%    |    Pressão: 970 mbar",
-        "",
-        "OBSERVAÇÕES GERAIS",
-        "Incerteza na medição de tensão: ±0,05%",
-        "Incerteza na medição de corrente: ±0,01%"
-    ];
-
-    doc.setFontSize(10);
-    obs.forEach(l => {
-        doc.text(l, 15, y);
-        y += 5;
-
-        if (y > 260) {
-            doc.addPage();
-            y = 20;
-        }
+    doc.autoTable({
+        startY: 25,
+        theme: "grid",
+        headStyles: { fillColor: [0, 102, 166], halign: "center" },
+        bodyStyles: { fontSize: 10 },
+        head: [["Campo", "Valor"]],
+        body: [
+            ["ID", e.id],
+            ["Data", e.data],
+            ["Nome", e.nome],
+            ["E-mail", e.email],
+            ["Departamento", e.departamento],
+            ["Regional", e.regional],
+            ["Código Inicial", e.cod_inicial],
+            ["Código Final", e.cod_final],
+            ["Elementos", e.elementos],
+            ["Equipamento", e.equipamentos],
+            ["Tipo de Ensaio", e.tipo_ensaio],
+            ["Norma Aplicada", e.norma],
+            ["Corrente de Fuga (µA)", e.corrente_fuga],
+            ["Resultado Final", e.resultado],
+            ["Aprovação", e.aprovacao ?? "-"]
+        ]
     });
 
-    y += 15;
+    let finalY = doc.lastAutoTable.finalY + 10;
+
+    /* ============================
+       TABELA DE CÓDIGOS (1395→1404)
+    ============================ */
+    let inicio = parseInt(e.cod_inicial);
+    let fim = parseInt(e.cod_final);
+
+    let elementos = [];
+    for (let i = inicio; i <= fim; i++) {
+        elementos.push([
+            i,             // Código
+            i,             // Rastreamento
+            `${e.corrente_fuga} µA <`, // Corrente de fuga
+            e.resultado.toUpperCase() // Resultado
+        ]);
+    }
+
+    doc.autoTable({
+        startY: finalY,
+        theme: "grid",
+        headStyles: { fillColor: [0, 102, 166], halign: "center" },
+        bodyStyles: { fontSize: 10 },
+        head: [["Código", "Rastreamento", "Corrente de Fuga", "Resultado"]],
+        body: elementos
+    });
+
+    finalY = doc.lastAutoTable.finalY + 8;
+
+    /* ============================
+       TOTAL DE ELEMENTOS
+    ============================ */
+    const total = elementos.length;
+    doc.setFontSize(11);
+    doc.setFont("Helvetica", "bold");
+    doc.text(`Total de Elementos: ${total}`, 14, finalY);
+    finalY += 10;
+
+    /* ============================
+       OBSERVAÇÕES
+    ============================ */
+    doc.setFontSize(10);
+    doc.setFont("Helvetica", "bold");
+    
+    const obs = [
+        "● Observação",
+        "Os EPI’s e EPC’s que estiverem com o código de rastreio e o ano de ensaio",
+        "referente ao laudo técnico, estão aprovadas para utilização em campo.",
+        "",
+        "● Informações do Ensaio",
+        "Ensaio de tensão aplicada: Verifica se o equipamento suporta a tensão",
+        "de ensaio CA conforme sua classe de isolação sem ocorrer rompimento",
+        "da rigidez dielétrica / flashover ou correntes acima do limite permitido.",
+        "ART do Ensaio Dielétrico: -",
+        "",
+        "● Equipamentos utilizados para realização do teste",
+        "Testador de Alta Tensão EEAT, modelo AT120050CADMT2SAURS232",
+        "120KVCA/100MA — Certif. Calibração Nº Co315225 (Fev/2025) — Aprovado.",
+        "",
+        "● Condições ambientais",
+        "Temperatura: 30°C   |   Umidade: 50%   |   Pressão: 970 mbar",
+        "",
+        "● Observações gerais",
+        "Incerteza Tensão: ±0,05%   |   Incerteza Corrente: ±0,01%"
+    ];
+
+    obs.forEach(line => {
+        doc.text(line, 14, finalY);
+        finalY += 5;
+    });
 
     /* ============================
        ASSINATURA CENTRALIZADA
-    ============================= */
-    doc.setFont("Helvetica", "normal");
-    doc.text("_____________________________________________", 105, y, { align: "center" });
-    y += 6;
-    doc.text("Wesley Fernandes de Souza", 105, y, { align: "center" });
-    y += 5;
-    doc.text("Responsável Técnico – CREA-PB: 1605187852", 105, y, { align: "center" });
+    ============================ */
+    finalY += 15;
+    doc.setFont("Helvetica", "bold");
+    doc.text("__________________________________________", 105, finalY, { align: "center" });
+
+    finalY += 6;
+    doc.text("Wesley Fernandes de Souza", 105, finalY, { align: "center" });
+
+    finalY += 5;
+    doc.setFontSize(10);
+    doc.text("Responsável Técnico – CREA-PB: 1605187852", 105, finalY, { align: "center" });
 
     /* ============================
        SALVAR PDF
-    ============================= */
+    ============================ */
     doc.save(`laudo_${e.id}.pdf`);
 }
 
