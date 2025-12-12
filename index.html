@@ -325,11 +325,24 @@ async function gerarPDF(eEncoded) {
     y = doc.lastAutoTable.finalY + 10;
 
     let img = getImagemEquipamento(e.equipamentos);
-    if (img) {
-        await addImage(img, 150, y, 40, 40);
-        doc.setFontSize(7);
-        doc.text("Imagem meramente ilustrativa", imgX + imgW/2, legendY, { align: "center" });
-    }
+if (img) {
+
+    const imgX = 150;
+    const imgY = y;
+    const imgW = 40;
+    const imgH = 40;
+
+    await addImage(img, imgX, imgY, imgW, imgH);
+
+    // Texto abaixo da imagem
+    doc.setFontSize(7);
+    doc.text(
+        "*Imagem meramente ilustrativa",
+        imgX + imgW / 2,
+        imgY + imgH + 4,
+        { align: "center" }
+    );
+}
 
     doc.autoTable({
         startY: y,
