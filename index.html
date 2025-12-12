@@ -180,13 +180,13 @@ function renderizar(lista) {
   }
 
   lista.forEach(e => {
-    // botão de aprovar aparece quando não há campo aprovacao preenchido
     const btnAprovar = e.aprovacao
       ? `<button class="btn" disabled style="background:#ccc;color:#333;border-radius:6px;padding:7px 10px">Aprovado</button>`
-      : `<button class="btn" style="background:#f36f21;color:#fff;border-radius:6px;padding:7px 10px" onclick="abrirModal(${e.id})">N° do certificado</button>`;
+      : `<button class="btn" style="background:#f36f21;color:#fff;border-radius:6px;padding:7px 10px" onclick="abrirModal(${e.id})">Aprovar</button>`;
 
-    // botão gerar pdf sempre presente (usa encodeURIComponent para evitar problemas)
-    const btnPdf = `<button class='btn btn-primary' onclick='gerarPDF("${encodeURIComponent(JSON.stringify(e))}")'>Gerar PDF</button>`;
+    const btnPdf = e.aprovacao
+      ? `<button class='btn btn-primary' onclick='gerarPDF("${encodeURIComponent(JSON.stringify(e))}")'>Gerar PDF</button>`
+      : `<button class='btn btn-primary' onclick='alert("Este ensaio ainda não possui número de certificação. O laudo não pode ser gerado.")'>Gerar PDF</button>`;
 
     tbody.innerHTML += `
       <tr>
@@ -194,12 +194,11 @@ function renderizar(lista) {
         <td>${e.nome ?? "-"}</td>
         <td>${e.equipamentos ?? "-"}</td>
         <td>${e.resultado ?? "-"}</td>
-        <td>${e.aprovacao ?? '-'}</td>
+        <td>${e.aprovacao ?? "-"}</td>
         <td style="display:flex;gap:6px;align-items:center">${btnPdf}${btnAprovar}</td>
       </tr>
     `;
-  });
-}
+});
 
 /* ============================================================
    FILTROS / BUSCA
