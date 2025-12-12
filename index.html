@@ -2,6 +2,8 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
+<title>Ensaios Dielétricos - Consulta (Modelo)</title>
+
 <!-- jsPDF + AutoTable -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
@@ -12,7 +14,6 @@
         background: #eef3f8;
         padding: 30px;
     }
-
     .container {
         max-width: 1300px;
         margin: auto;
@@ -21,18 +22,15 @@
         border-radius: 12px;
         box-shadow: 0 4px 20px rgba(0,0,0,.08);
     }
-
     h2 {
         margin-bottom: 20px;
         color: #003d66;
     }
-
     .filtros {
         display: flex;
         gap: 10px;
         margin-bottom: 15px;
     }
-
     .filtros input,
     .filtros select {
         padding: 10px;
@@ -41,69 +39,30 @@
         border: 1px solid #ccc;
         width: 100%;
     }
-
     table {
         width: 100%;
         border-collapse: collapse;
         border-radius: 12px;
         overflow: hidden;
     }
-
     th {
         background: #0066a6;
         color: #fff;
         padding: 12px;
         text-align: left;
     }
-
     td {
         padding: 12px;
         border-bottom: 1px solid #ddd;
     }
-
-    tr:hover {
-        background: #f2f8fc;
-    }
-
-    .btn {
-        padding: 7px 14px;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 14px;
-        transition: 0.2s;
-    }
-
-    .btn-primary {
-        background: #0077c2;
-        color: #fff;
-    }
-
-    .btn-primary:hover {
-        background: #005f99;
-    }
-
-    .modal {
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background: rgba(0,0,0,.5);
-        display: none;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .modal-content {
-        background: white;
-        padding: 25px;
-        border-radius: 12px;
-        width: 320px;
-        text-align: center;
-        box-shadow: 0 5px 20px rgba(0,0,0,.2);
-    }
+    tr:hover { background: #f2f8fc; }
+    .btn { padding: 7px 14px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: .2s; }
+    .btn-primary { background: #0077c2; color: #fff; }
+    .btn-primary:hover { background: #005f99; }
+    .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,.5); display:none; justify-content:center; align-items:center; }
+    .modal-content { background:white; padding:25px; border-radius:12px; width:320px; text-align:center; box-shadow:0 5px 20px rgba(0,0,0,.2); }
 </style>
 </head>
-
 <body>
 
 <div class="container">
@@ -124,12 +83,12 @@
     <table id="tabela">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Nome</th>
-                <th>Equipamentos</th>
-                <th>Resultado</th>
-                <th>Aprovação</th>
-                <th>Ação</th>
+                <th style="width:6%;">ID</th>
+                <th style="width:28%;">Nome</th>
+                <th style="width:36%;">Equipamentos</th>
+                <th style="width:10%;">Resultado</th>
+                <th style="width:10%;">Aprovação</th>
+                <th style="width:10%;">Ação</th>
             </tr>
         </thead>
         <tbody></tbody>
@@ -148,14 +107,12 @@
 </div>
 
 <script>
-
-//* ================================
-   BANCO DE IMAGENS POR EQUIPAMENTO
+/* ================================
+   NORMALIZAÇÃO (remove acentos, uppercase)
 ================================ */
-
-/* Função para normalizar texto */
 function normalizar(str) {
-    return str
+    if (!str && str !== "") return "";
+    return String(str)
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
         .toUpperCase()
@@ -164,31 +121,32 @@ function normalizar(str) {
 
 /* ==========================================
    MAPA COMPLETO DE IMAGENS POR EQUIPAMENTO
+   (chaves serão transformadas para normalizadas)
 ========================================== */
 const imagensEquipamentos = {
     "ANDAIME ISOLANTE": "listar_ensaios/ANDAIME ISOLANTE.jpg",
     "ATERRAMENTO MT": "listar_ensaios/ATERRAMENTO MT.jpg",
     "BANQUETA ISOLADA": "listar_ensaios/BANQUETA ISOLADA.png",
-    "BASTÃO ASPIRAL": "listar_ensaios/BASTÃO ASPIRAL.jpg",
-    "BASTÃO DE BERÇO": "listar_ensaios/BASTÃO DE BERÇO.jpg",
-    "BASTÃO DE TRAÇÃO": "listar_ensaios/BASTÃO DE TRAÇÃO.jpg",
-    "BASTÃO GARRA": "listar_ensaios/BASTÃO GARRA.jpg",
-    "BASTÃO LISO": "listar_ensaios/BASTÃO LISO.jpg",
-    "BASTÃO PEGA TUDO": "listar_ensaios/BASTÃO PEGA TUDO.jpg",
-    "BASTÃO SEPARADOR DE CORDA": "listar_ensaios/BASTÃO SEPARADOR DE CORDA.jpg",
-    "BASTÃO SUPORTE BY PASS": "listar_ensaios/BASTÃO SUPORTE BY PASS.jpg",
-    "BASTÃO TENSOR": "listar_ensaios/BASTÃO TENSOR.jpg",
-    "BASTÃO UNIVERSAL": "listar_ensaios/BASTÃO UNIVERSAL.jpg",
-    "BASTÃO VARA DE MANOBRA": "listar_ensaios/BASTÃO VARA DE MANOBRA.jpg",
-    "BASTÃO VARA TELESCÓPICA": "listar_ensaios/BASTÃO VARA TELESCÓPICA.jpg",
+    "BASTAO ASPIRAL": "listar_ensaios/BASTÃO ASPIRAL.jpg",
+    "BASTAO DE BERCO": "listar_ensaios/BASTÃO DE BERÇO.jpg",
+    "BASTAO DE TRACAO": "listar_ensaios/BASTÃO DE TRAÇÃO.jpg",
+    "BASTAO GARRA": "listar_ensaios/BASTÃO GARRA.jpg",
+    "BASTAO LISO": "listar_ensaios/BASTÃO LISO.jpg",
+    "BASTAO PEGA TUDO": "listar_ensaios/BASTÃO PEGA TUDO.jpg",
+    "BASTAO SEPARADOR DE CORDA": "listar_ensaios/BASTÃO SEPARADOR DE CORDA.jpg",
+    "BASTAO SUPORTE BY PASS": "listar_ensaios/BASTÃO SUPORTE BY PASS.jpg",
+    "BASTAO TENSOR": "listar_ensaios/BASTÃO TENSOR.jpg",
+    "BASTAO UNIVERSAL": "listar_ensaios/BASTÃO UNIVERSAL.jpg",
+    "BASTAO VARA DE MANOBRA": "listar_ensaios/BASTÃO VARA DE MANOBRA.jpg",
+    "BASTAO VARA TELESCOPICA": "listar_ensaios/BASTÃO VARA TELESCÓPICA.jpg",
     "BY PASS DE TP": "listar_ensaios/BY PASS DE TP.jpg",
     "BY PASS": "listar_ensaios/BY PASS.jpg",
-    "CAPACETE SEGURANÇA": "listar_ensaios/CAPACETE SEGURANÇA.jpg",
+    "CAPACETE SEGURANCA": "listar_ensaios/CAPACETE SEGURANÇA.jpg",
     "COBERTURA CIRCULAR": "listar_ensaios/COBERTURA CIRCULAR.png",
-    "COBERTURA DE COND. FLEXIVEL": "listar_ensaios/COBERTURA DE COND. FLEXIVEL.jpg",
-    "COBERTURA DE COND. RIGIDA": "listar_ensaios/COBERTURA DE COND. RIGIDA.jpg",
+    "COBERTURA DE COND FLEXIVEL": "listar_ensaios/COBERTURA DE COND. FLEXIVEL.jpg",
+    "COBERTURA DE COND RIGIDA": "listar_ensaios/COBERTURA DE COND. RIGIDA.jpg",
     "DAC - DISPOSITIVO ABERTURA COM CARGA": "listar_ensaios/DAC - DISPOSITIVO ABERTURA COM CARGA.png",
-    "LENÇO ISOLANTE LV": "listar_ensaios/LENÇO ISOLANTE LV.jpg",
+    "LENCO ISOLANTE LV": "listar_ensaios/LENÇO ISOLANTE LV.jpg",
     "LUVA ISOLANTE BT": "listar_ensaios/LUVA ISOLANTE BT.jpg",
     "LUVA ISOLANTE MT": "listar_ensaios/LUVA ISOLANTE MT.jpg",
     "LUVA ISOLANTE SED": "listar_ensaios/LUVA ISOLANTE SED.jpg",
@@ -196,13 +154,20 @@ const imagensEquipamentos = {
     "MANGA ISOLANTE MT": "listar_ensaios/MANGA ISOLANTE MT.jpg",
     "MANTA ISOLANTE BT": "listar_ensaios/MANTA ISOLANTE BT.jpg",
     "SEPARADOR DE ESCADA": "listar_ensaios/SEPARADOR DE ESCADA.jpg",
-    "SKY LANÇA CLASSE A - 138 KW": "listar_ensaios/SKY LANÇA CLASSE A - 138 KW.jfif",
-    "SKY LANÇA CLASSE B - 69 KW": "listar_ensaios/SKY LANÇA CLASSE B - 69 KW.jfif",
-    "SKY LANÇA CLASSE C - 46 KW": "listar_ensaios/SKY LANÇA CLASSE C - 46 KW.jfif",
+    "SKY LANCA CLASSE A - 138 KW": "listar_ensaios/SKY LANÇA CLASSE A - 138 KW.jfif",
+    "SKY LANCA CLASSE B - 69 KW": "listar_ensaios/SKY LANÇA CLASSE B - 69 KW.jfif",
+    "SKY LANCA CLASSE C - 46 KW": "listar_ensaios/SKY LANÇA CLASSE C - 46 KW.jfif",
     "TALHA": "listar_ensaios/TALHA.jpg",
-    "TESOURÃO PEQUENO": "listar_ensaios/TESOURÃO PEQUENO.jpg"
+    "TESOURAO PEQUENO": "listar_ensaios/TESOURÃO PEQUENO.jpg",
+    // logo da energisa (mesma pasta)
+    "ENERGISA": "listar_ensaios/energisa.jfif"
 };
 
+/* criar mapa normalizado para lookup rápido */
+const mapaNormalizado = {};
+for (const k in imagensEquipamentos) {
+    mapaNormalizado[ normalizar(k) ] = imagensEquipamentos[k];
+}
 
 /* ================================
    CONTROLE PRINCIPAL
@@ -290,39 +255,71 @@ async function salvarAprovacao() {
 }
 
 /* ============================
-   GERAR PDF
+   GERAR PDF (MODELO EXATO)
 ============================ */
 async function gerarPDF(e) {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
 
-    /* === FORMATAR DATA === */
-    const dataFormatada = e.data
-        ? new Date(e.data).toLocaleDateString("pt-BR")
-        : "";
+    /* ========== helpers ========== */
+    function addImageFromPath(path, x, y, w, h) {
+        return new Promise(async (resolve) => {
+            try {
+                const res = await fetch(path);
+                if (!res.ok) return resolve(false);
+                const blob = await res.blob();
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const base64 = reader.result;
+                    // detect image type
+                    const mime = base64.split(",")[0].match(/data:(image\/[a-zA-Z]+);/);
+                    const format = mime ? mime[1].split("/")[1].toUpperCase() : "JPEG";
+                    doc.addImage(base64, format, x, y, w, h);
+                    resolve(true);
+                };
+                reader.readAsDataURL(blob);
+            } catch (err) {
+                resolve(false);
+            }
+        });
+    }
 
+    /* formatar data e mês */
+    const dataFormatada = e.data ? new Date(e.data).toLocaleDateString("pt-BR") : "";
     const meses = [
-        "01 - JANEIRO", "02 - FEVEREIRO", "03 - MARÇO", "04 - ABRIL",
-        "05 - MAIO", "06 - JUNHO", "07 - JULHO", "08 - AGOSTO",
-        "09 - SETEMBRO", "10 - OUTUBRO", "11 - NOVEMBRO", "12 - DEZEMBRO"
+        "01 - JANEIRO","02 - FEVEREIRO","03 - MARÇO","04 - ABRIL",
+        "05 - MAIO","06 - JUNHO","07 - JULHO","08 - AGOSTO",
+        "09 - SETEMBRO","10 - OUTUBRO","11 - NOVEMBRO","12 - DEZEMBRO"
     ];
-    const mes = meses[new Date(e.data).getMonth()];
+    const mes = e.data ? meses[new Date(e.data).getMonth()] : "";
 
+    /* === HEADER: logo + título centralizado === */
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let y = 12;
 
-    /* == TÍTULO == */
-    doc.setFontSize(14);
+    // logo energisa (pequena, canto esquerdo)
+    const logoPath = mapaNormalizado[ normalizar("ENERGISA") ] || "listar_ensaios/energisa.jfif";
+    await addImageFromPath(logoPath, 14, 8, 28, 18).catch(()=>{});
+
+    doc.setFontSize(16);
     doc.setFont("Helvetica", "bold");
-    doc.text("LAUDO DE ENSAIO DIELÉTRICO", 105, 15, { align: "center" });
+    doc.text("LAUDO DE ENSAIO DIELÉTRICO", pageWidth/2, y, { align: "center" });
+    y += 8;
 
+    // espaço antes da tabela de cabeçalho
+    y += 4;
 
-    /* == CABEÇALHO DO LAUDO == */
+    /* === TABELA CABEÇALHO (menor largura) === */
     doc.autoTable({
-        startY: 22,
+        startY: y,
         theme: "grid",
-        styles: { fontSize: 9 },
-        headStyles: { fillColor: [0, 102, 166], halign: "center" },
-        head: [["Campo", "Valor"]],
+        tableWidth: 140,       // tabela mais estreita
+        margin: { left: 14 },
+        styles: { fontSize: 9, cellPadding: 2 },
+        head: [["Laudo", "Valor"]],
+        headStyles: { fillColor: [0,102,166], textColor: 255, halign: "center" },
         body: [
+            ["Laudo", "EPB/EBO"],
             ["Certificado nº", e.aprovacao ?? "-"],
             ["Mês do Ensaio", mes],
             ["Regional", e.regional],
@@ -331,124 +328,156 @@ async function gerarPDF(e) {
         ]
     });
 
-    let finalY = doc.lastAutoTable.finalY + 10;
+    let afterHeaderY = doc.lastAutoTable.finalY + 6;
 
+    /* === DOIS BLOCOS: imagem (direita) e info (esquerda) ===
+       - deixamos espaço para imagem acima da pequena tabela
+       - imagem posicionada em x ~120
+    */
+    const imgX = 120;
+    const imgY = afterHeaderY;
+    const imgW = 66;
+    const imgH = 66;
 
-    /* == TABELA PRINCIPAL == */
+    // tentar inserir imagem do equipamento (normalizando chave)
+    const chaveImg = normalizar(e.equipamentos || "");
+    const caminhoImg = mapaNormalizado[chaveImg];
+
+    if (caminhoImg) {
+        // add image (se possível)
+        await addImageFromPath(caminhoImg, imgX, imgY, imgW, imgH).catch(()=>{});
+    } else {
+        // se não tiver a imagem, pode ser deixado em branco
+    }
+
+    // pequena tabela de informações do equipamento (à esquerda da imagem)
     doc.autoTable({
-        startY: finalY,
+        startY: afterHeaderY,
         theme: "grid",
-        styles: { fontSize: 9 },
-        headStyles: { fillColor: [0, 102, 166], halign: "center" },
+        tableWidth: 90,
+        margin: { left: 14 },
+        styles: { fontSize: 9, cellPadding: 2 },
         head: [["Campo", "Valor"]],
+        headStyles: { fillColor: [0,102,166], textColor:255, halign:"center" },
         body: [
-            ["ID", e.id],
-            ["Data", dataFormatada],
-            ["Nome", e.nome],
-            ["E-mail", e.email],
-            ["Código Inicial", e.cod_inicial],
-            ["Código Final", e.cod_final],
-            ["Elementos", e.elementos],
             ["Equipamento", e.equipamentos],
             ["Tipo de Ensaio", e.tipo_ensaio],
-            ["Norma Aplicada", e.norma],
-            ["Corrente de Fuga (µA)", e.corrente_fuga],
-            ["Resultado Final", e.resultado]
+            ["Norma Aplicada", e.norma]
         ]
     });
 
-    finalY = doc.lastAutoTable.finalY + 10;
-
-
-    /* == LISTA DE ELEMENTOS == */
-    let ini = Number(e.cod_inicial);
-    let fim = Number(e.cod_final);
-
-    let itens = [];
-    for (let i = ini; i <= fim; i++) {
-        itens.push([
-            i,
-            i,
-            `${e.corrente_fuga} µA`,
-            e.resultado.toUpperCase()
-        ]);
-    }
+    // abaixo da imagem (lado direito) colocamos a tabela menor com tensão/corrente/resultado
+    const infoRightStartY = afterHeaderY + doc.lastAutoTable.finalY - afterHeaderY;
+    // start Y for right small table: align with top of image
+    const rightTableY = afterHeaderY;
 
     doc.autoTable({
-        startY: finalY,
+        startY: rightTableY,
         theme: "grid",
-        styles: { fontSize: 9 },
-        headStyles: { fillColor: [0,102,166], halign: "center" },
-        head: [["Código", "Rastreamento", "Corrente de Fuga", "Resultado"]],
-        body: itens
+        tableWidth: 66,
+        margin: { left: imgX },
+        styles: { fontSize: 8.5, cellPadding: 2 },
+        head: [["Campo", "Valor"]],
+        headStyles: { fillColor: [243, 189, 0], textColor: 0, halign:"center" },
+        body: [
+            ["Equipamento", e.equipamentos],
+            ["Tipo de Ensaio", e.tipo_ensaio],
+            ["Norma", e.norma],
+            ["Corrente (µA)", e.corrente_fuga],
+            ["Resultado", e.resultado]
+        ]
     });
 
-    finalY = doc.lastAutoTable.finalY + 8;
+    // ajustar finalY para seguir após ambos blocos
+    let afterBlocksY = Math.max(doc.lastAutoTable.finalY, imgY + imgH) + 10;
 
+    /* === TABELA DE CÓDIGOS (estreita e legível) === */
+    // construir elementos entre cod_inicial e cod_final
+    const ini = Number(e.cod_inicial || e.cod_inicial || 0);
+    const fim = Number(e.cod_final || e.cod_final || ini);
+    const rows = [];
+    for (let i = ini; i <= fim; i++) {
+        rows.push([String(i), String(i), `${e.corrente_fuga} µA`, e.resultado ? e.resultado.toUpperCase() : ""]);
+    }
+
+    // se muitos elementos, a autotable cuida da quebra e altura
+    doc.autoTable({
+        startY: afterBlocksY,
+        theme: "grid",
+        styles: { fontSize: 9, cellPadding: 2 },
+        headStyles: { fillColor: [0,102,166], halign: "center" },
+        head: [["Código", "Rastreamento", "Corrente de Fuga", "Resultado"]],
+        body: rows,
+        margin: { left: 14, right: 14 },
+        columnStyles: {
+            0: { cellWidth: 22 }, // código estreito
+            1: { cellWidth: 30 }, // rastreamento
+            2: { cellWidth: 40 }, // corrente
+            3: { cellWidth: 40 }  // resultado
+        }
+    });
+
+    let afterCodigosY = doc.lastAutoTable.finalY + 6;
+
+    // total de elementos
     doc.setFont("Helvetica", "bold");
     doc.setFontSize(10);
-    doc.text(`Total de Elementos: ${itens.length}`, 14, finalY);
+    doc.text(`Total de Elementos: ${rows.length}`, 14, afterCodigosY);
+    afterCodigosY += 8;
 
-    finalY += 10;
-
-
-    /* == OBSERVAÇÕES == */
+    /* === OBSERVAÇÕES (menor e em negrito para títulos) === */
     doc.setFont("Helvetica", "bold");
     doc.setFontSize(11);
-    doc.text("Observações", 14, finalY);
-
-    finalY += 5;
-    doc.line(14, finalY, 196, finalY);
-    finalY += 6;
+    doc.text("Observações", 14, afterCodigosY);
+    afterCodigosY += 5;
+    doc.setDrawColor(0);
+    doc.setLineWidth(0.3);
+    doc.line(14, afterCodigosY, pageWidth - 14, afterCodigosY);
+    afterCodigosY += 6;
 
     doc.setFont("Helvetica", "normal");
-    doc.setFontSize(8);
-
-    const obs = [
+    doc.setFontSize(8.5);
+    const obsLines = [
         "• Os EPI’s e EPC’s com código de rastreio correspondente ao laudo estão aprovados para uso em campo.",
         "• Ensaio de Tensão Aplicada: Verifica a capacidade dielétrica sem rompimento ou excesso de corrente.",
         "• ART do Ensaio Dielétrico: -",
-        "• Equipamento Utilizado:",
-        "  Testador de Alta Tensão EEAT – Modelo AT120050CADMT2SAURS232",
-        "  Certificado Co315225 (Fev/2025) – Aprovado.",
-        "• Condições Ambientais:",
-        "  Temperatura: 30°C | Umidade: 50% | Pressão: 970 mbar",
-        "• Observações gerais:",
-        "  Incerteza na medição de Tensão: +/- 0,05%",
-        "  Incerteza na medição de Corrente: +/- 0,01%"
+        "• Equipamento Utilizado: Testador de Alta Tensão EEAT – Modelo AT120050CADMT2SAURS232. Certificado Co315225 (Fev/2025) – Aprovado.",
+        "• Condições Ambientais: Temperatura: 30°C | Umidade: 50% | Pressão: 970 mbar",
+        "• Observações gerais: Incerteza na medição de Tensão: +/- 0,05% | Incerteza na medição de Corrente: +/- 0,01%"
     ];
-
-    obs.forEach(l => {
-        doc.text(l, 14, finalY);
-        finalY += 4;
+    obsLines.forEach(l => {
+        doc.text(l, 14, afterCodigosY);
+        afterCodigosY += 5;
+        // quebra de página se necessário
+        if (afterCodigosY > doc.internal.pageSize.height - 40) {
+            doc.addPage();
+            afterCodigosY = 20;
+        }
     });
 
-
-    /* == ASSINATURA == */
+    /* === ASSINATURA (rodapé centralizado com verificação de espaço) === */
+    let finalY = afterCodigosY + 12;
     const pageHeight = doc.internal.pageSize.height;
-
     if (finalY > pageHeight - 30) {
         doc.addPage();
-        finalY = 20;
+        finalY = 30;
     }
 
     doc.setFontSize(10);
-    doc.text("__________________________________________", 105, finalY, { align: "center" });
-
+    doc.text("__________________________________________", pageWidth/2, finalY, { align: "center" });
     finalY += 6;
     doc.setFont("Helvetica", "bold");
-    doc.text("Wesley Fernandes de Souza", 105, finalY, { align: "center" });
-
+    doc.text("Wesley Fernandes de Souza", pageWidth/2, finalY, { align: "center" });
     finalY += 5;
     doc.setFont("Helvetica", "normal");
     doc.setFontSize(9);
-    doc.text("Responsável Técnico – CREA-PB: 1605187852", 105, finalY, { align: "center" });
+    doc.text("Responsável Técnico – CREA-PB: 1605187852", pageWidth/2, finalY, { align: "center" });
 
-
-    /* == SALVAR == */
-    doc.save(`laudo_${e.id}.pdf`);
+    /* === SALVAR === */
+    doc.save(`laudo_${e.id || Date.now()}.pdf`);
 }
 
+/* iniciar */
 carregar();
 </script>
 
