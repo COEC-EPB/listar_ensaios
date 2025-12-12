@@ -152,19 +152,6 @@ async function carregarImagensGitHub() {
         console.error("Erro ao carregar imagens:", err);
     }
 }
-/* formatar data e mês */
-const meses = [
-    "01 - JANEIRO","02 - FEVEREIRO","03 - MARÇO","04 - ABRIL",
-    "05 - MAIO","06 - JUNHO","07 - JULHO","08 - AGOSTO",
-    "09 - SETEMBRO","10 - OUTUBRO","11 - NOVEMBRO","12 - DEZEMBRO"
-];
-
-// pega APENAS o mês a partir do campo e.data
-let mes = "";
-if (e.data) {
-    const d = new Date(e.data);
-    mes = meses[d.getMonth()];
-}
     
 function getImagemEquipamento(equipamento) {
     let chave = normalizar(equipamento);
@@ -257,6 +244,16 @@ async function salvarAprovacao() {
    6. GERAR PDF COM IMAGEM AUTOMÁTICA
 ============================================================ */
 async function gerarPDF(e) {
+
+    // === FORMATAÇÃO DO MÊS A PARTIR DA DATA ===
+const meses = [
+    "01 - JANEIRO","02 - FEVEREIRO","03 - MARÇO","04 - ABRIL",
+    "05 - MAIO","06 - JUNHO","07 - JULHO","08 - AGOSTO",
+    "09 - SETEMBRO","10 - OUTUBRO","11 - NOVEMBRO","12 - DEZEMBRO"
+];
+
+let dataObj = new Date(e.data);
+e.mes = meses[dataObj.getMonth()];
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: "mm", format: "a4" });
 
