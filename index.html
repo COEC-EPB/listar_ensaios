@@ -238,9 +238,7 @@ async function gerarPDF(e) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
-    /* ===================================
-       FORMATAR DATA
-    =================================== */
+    /* === FORMATAR DATA === */
     const dataFormatada = e.data
         ? new Date(e.data).toLocaleDateString("pt-BR")
         : "";
@@ -252,24 +250,22 @@ async function gerarPDF(e) {
     ];
     const mes = meses[new Date(e.data).getMonth()];
 
-    /* ===================================
-       TÍTULO
-    =================================== */
+
+    /* === TÍTULO === */
     doc.setFontSize(14);
     doc.setFont("Helvetica", "bold");
     doc.text("LAUDO DE ENSAIO DIELÉTRICO", 105, 15, { align: "center" });
 
-    /* ===================================
-       TABELA INICIAL
-    =================================== */
+    /* ============================================================
+       TABELA CABEÇALHO DO LAUDO
+    ============================================================ */
     doc.autoTable({
         startY: 22,
         theme: "grid",
-        headStyles: { fillColor: [0, 102, 166], halign: "center", fontSize: 9 },
-        bodyStyles: { fontSize: 9 },
-        head: [["Laudo do Ensaio Dieletrico EPB/EBO"]],
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [0, 102, 166], halign: "center" },
+        head: [["Campo", "Valor"]],
         body: [
-            ["Laudo do Ensaio Dielétrico EPB/EBO", ""],
             ["Certificado nº", e.aprovacao ?? "-"],
             ["Mês do Ensaio", mes],
             ["Regional", e.regional],
@@ -278,17 +274,17 @@ async function gerarPDF(e) {
         ]
     });
 
-    let finalY = doc.lastAutoTable.finalY + 8;
+    let finalY = doc.lastAutoTable.finalY + 10;
 
-    /* ===================================
+    /* ============================================================
        TABELA PRINCIPAL DO LAUDO
-    =================================== */
+    ============================================================ */
     doc.autoTable({
         startY: finalY,
         theme: "grid",
-        headStyles: { fillColor: [0, 102, 166], halign: "center", fontSize: 9 },
-        bodyStyles: { fontSize: 9 },
-        head: [["Laudo do Ensaio Dieletrico EPB/EBO"]],
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [0, 102, 166], halign: "center" },
+        head: [["Campo", "Valor"]],
         body: [
             ["ID", e.id],
             ["Data", dataFormatada],
@@ -307,18 +303,19 @@ async function gerarPDF(e) {
 
     finalY = doc.lastAutoTable.finalY + 10;
 
-    /* ===================================
-       TABELA DOS ELEMENTOS
-    =================================== */
-    let ini = parseInt(e.cod_inicial);
-    let fim = parseInt(e.cod_final);
+
+    /* ============================================================
+       TABELA LISTA DE ELEMENTOS (Código → Corrente → Resultado)
+    ============================================================ */
+    let ini = Number(e.cod_inicial);
+    let fim = Number(e.cod_final);
 
     let itens = [];
     for (let i = ini; i <= fim; i++) {
         itens.push([
             i,
             i,
-            `${e.corrente_fuga} µA <`,
+            `${e.corrente_fuga} µA`,
             e.resultado.toUpperCase()
         ]);
     }
@@ -326,36 +323,33 @@ async function gerarPDF(e) {
     doc.autoTable({
         startY: finalY,
         theme: "grid",
-        headStyles: { fillColor: [0, 102, 166], halign: "center", fontSize: 9 },
-        bodyStyles: { fontSize: 9 },
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [0,102,166], halign: "center" },
         head: [["Código", "Rastreamento", "Corrente de Fuga", "Resultado"]],
         body: itens
     });
 
-    finalY = doc.lastAutoTable.finalY + 10;
+    finalY = doc.lastAutoTable.finalY + 8;
 
-    doc.setFontSize(10);
     doc.setFont("Helvetica", "bold");
+    doc.setFontSize(10);
     doc.text(`Total de Elementos: ${itens.length}`, 14, finalY);
 
-    finalY += 8;
+    finalY += 10;
 
-    /* ===================================
+    /* ============================================================
        OBSERVAÇÕES
-    =================================== */
-    doc.setFontSize(11);
+    ============================================================ */
     doc.setFont("Helvetica", "bold");
+    doc.setFontSize(11);
     doc.text("Observações", 14, finalY);
+
     finalY += 5;
-
-    doc.setDrawColor(0);
-    doc.setLineWidth(0.2);
     doc.line(14, finalY, 196, finalY);
-
     finalY += 6;
 
-    doc.setFontSize(8);
     doc.setFont("Helvetica", "normal");
+    doc.setFontSize(8);
 
     const obs = [
         "• Os EPI’s e EPC’s com código de rastreio correspondente ao laudo estão aprovados para uso em campo.",
@@ -371,44 +365,38 @@ async function gerarPDF(e) {
         "  Incerteza na medição de Corrente: +/- 0,01%"
     ];
 
-    obs.forEach(line => {
-        doc.text(line, 14, finalY);
-        finalY += 4.2;
+    obs.forEach(l => {
+        doc.text(l, 14, finalY);
+        finalY += 4;
     });
 
-    /* ===================================
-   ASSINATURA — RODAPÉ (CENTRALIZADO)
-=================================== */
+    /* ============================================================
+       ASSINATURA (RODAPÉ)
+    ============================================================ */
+    const pageHeight = doc.internal.pageSize.height;
 
-// Altura máxima utilizável antes da quebra (A4 → ~280mm)
-const pageHeight = doc.internal.pageSize.height;
+    if (finalY > pageHeight - 30) {
+        doc.addPage();
+        finalY = 20;
+    }
 
-if (finalY > pageHeight - 30) {
-    doc.addPage();
-    finalY = 20;
-}
+    doc.setFontSize(10);
+    doc.text("__________________________________________", 105, finalY, { align: "center" });
 
-doc.setFont("Helvetica", "normal");
-doc.setFontSize(10);
-doc.text("__________________________________________", 105, finalY, { align: "center" });
+    finalY += 6;
+    doc.setFont("Helvetica", "bold");
+    doc.text("Wesley Fernandes de Souza", 105, finalY, { align: "center" });
 
-finalY += 6;
-doc.setFont("Helvetica", "bold");
-doc.text("Wesley Fernandes de Souza", 105, finalY, { align: "center" });
+    finalY += 5;
+    doc.setFont("Helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text("Responsável Técnico – CREA-PB: 1605187852", 105, finalY, { align: "center" });
 
-finalY += 5;
-doc.setFont("Helvetica", "normal");
-doc.setFontSize(9);
-doc.text("Responsável Técnico – CREA-PB: 1605187852", 105, finalY, { align: "center" });
-
-    /* ===================================
-       SALVAR
-    =================================== */
+    /* ============================================================
+       SALVAR PDF
+    ============================================================ */
     doc.save(`laudo_${e.id}.pdf`);
 }
-
-
-
 carregar();
 </script>
 
