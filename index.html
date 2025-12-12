@@ -114,19 +114,19 @@ function normalizar(str) {
     if (!str) return "";
     return str
         .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "") 
+        .replace(/[\u0300-\u036f]/g, "")
         .toUpperCase()
         .trim();
 }
 
 /* ============================================================
-   2. CARREGAR AUTOMATICAMENTE TODAS AS IMAGENS DO REPO
+   2. CARREGAR IMAGENS DO GITHUB
 ============================================================ */
 const GITHUB_API =
-  "https://api.github.com/repos/COEC-EPB/listar_ensaios/contents/";
+    "https://api.github.com/repos/COEC-EPB/listar_ensaios/contents/";
 
 const GITHUB_RAW =
-  "https://raw.githubusercontent.com/COEC-EPB/listar_ensaios/main/";
+    "https://raw.githubusercontent.com/COEC-EPB/listar_ensaios/main/";
 
 let mapaImagens = {};
 
@@ -140,6 +140,7 @@ async function carregarImagensGitHub() {
 
             let nomeOriginal = arq.name.replace(/\.(png|jpg|jpeg|jfif|tif)$/i, "");
             let chave = normalizar(nomeOriginal);
+
             mapaImagens[chave] = GITHUB_RAW + encodeURIComponent(arq.name);
         });
 
@@ -150,12 +151,11 @@ async function carregarImagensGitHub() {
 }
 
 function getImagemEquipamento(equipamento) {
-    let chave = normalizar(equipamento);
-    return mapaImagens[chave] || null;
+    return mapaImagens[normalizar(equipamento)] || null;
 }
 
 /* ============================================================
-   3. LISTAGEM DE ENSAIOS
+   3. LISTAGEM
 ============================================================ */
 let ensaiosOriginais = [];
 const API = "https://ensai-dieletrico.pedro-fillype.workers.dev";
@@ -186,7 +186,7 @@ function renderizar(lista) {
                 <td>${e.nome}</td>
                 <td>${e.equipamentos}</td>
                 <td>${e.resultado}</td>
-                <td>${e.aprovacao ?? '-'}</td>
+                <td>${e.aprovacao ?? "-"}</td>
                 <td style="display:flex;gap:6px;">${btnPdf} ${btnAprovar}</td>
             </tr>`;
     });
@@ -206,9 +206,10 @@ function aplicarFiltros() {
             e.nome.toLowerCase().includes(nome) &&
             e.equipamentos.toLowerCase().includes(eqp) &&
             (aprov === "" ||
-             (aprov === "-" && !e.aprovacao) ||
-             (aprov === "ap" && e.aprovacao)) &&
-            (geral === "" || JSON.stringify(e).toLowerCase().includes(geral))
+                (aprov === "-" && !e.aprovacao) ||
+                (aprov === "ap" && e.aprovacao)) &&
+            (geral === "" ||
+                JSON.stringify(e).toLowerCase().includes(geral))
         );
     });
 
@@ -219,7 +220,7 @@ document.querySelectorAll("#filtroNome,#filtroEquipamento,#filtroAprovacao,#busc
     .forEach(el => el.addEventListener("input", aplicarFiltros));
 
 /* ============================================================
-   5. MODAL DE APROVAÇÃO
+   5. MODAL
 ============================================================ */
 let ensaioSelecionado = null;
 
@@ -233,16 +234,16 @@ function fecharModal() {
 }
 
 async function salvarAprovacao() {
-    const aprov = document.getElementById("numeroAprovacao").value.trim();
+    const aprov = numeroAprovacao.value.trim();
 
     if (!aprov) {
-        alert("Digite o número de aprovação antes de salvar.");
+        alert("Digite o número de aprovação.");
         return;
     }
 
     await fetch(`${API}/salvar-aprovacao`, {
         method: "POST",
-        headers: {"Content-Type":"application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: ensaioSelecionado, aprovacao: aprov })
     });
 
@@ -251,27 +252,23 @@ async function salvarAprovacao() {
 }
 
 /* ============================================================
-   6. GERAR PDF 
+   6. GERAR PDF
 ============================================================ */
 async function gerarPDF(eEncoded) {
 
     const e = JSON.parse(decodeURIComponent(eEncoded));
 
-    // BLOQUEAR CASO NÃO TENHA APROVAÇÃO
     if (!e.aprovacao) {
         alert("Este ensaio não possui número de certificação. O laudo não pode ser gerado.");
         return;
     }
 
-    // DEFINIR MÊS AUTOMÁTICO
     const meses = [
         "01 - JANEIRO","02 - FEVEREIRO","03 - MARÇO","04 - ABRIL",
         "05 - MAIO","06 - JUNHO","07 - JULHO","08 - AGOSTO",
         "09 - SETEMBRO","10 - OUTUBRO","11 - NOVEMBRO","12 - DEZEMBRO"
     ];
-
-    const dataObj = new Date(e.data);
-    e.mes = meses[dataObj.getMonth()];
+    e.mes = meses[new Date(e.data).getMonth()];
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: "mm", format: "a4" });
@@ -280,12 +277,12 @@ async function gerarPDF(eEncoded) {
         try {
             const res = await fetch(path);
             const blob = await res.blob();
-            const reader = new FileReader();
 
             return new Promise(resolve => {
+                const reader = new FileReader();
                 reader.onload = () => {
                     const base64 = reader.result;
-                    const ext = path.split('.').pop().toUpperCase();
+                    const ext = path.split(".").pop().toUpperCase();
                     doc.addImage(base64, ext === "PNG" ? "PNG" : "JPEG", x, y, w, h);
                     resolve(true);
                 };
@@ -300,8 +297,8 @@ async function gerarPDF(eEncoded) {
 
     await addImage(mapaImagens["ENERGISA"], 14, 8, 30, 18);
 
-    doc.setFontSize(16).setFont("Helvetica","bold");
-    doc.text("LAUDO DE ENSAIO DIELÉTRICO", pageWidth/2, 16, { align:"center" });
+    doc.setFontSize(16).setFont("Helvetica", "bold");
+    doc.text("LAUDO DE ENSAIO DIELÉTRICO", pageWidth / 2, 16, { align: "center" });
 
     let y = 30;
 
@@ -310,11 +307,11 @@ async function gerarPDF(eEncoded) {
         tableWidth: 150,
         margin: { left: 14 },
         head: [["Laudo", "Valor"]],
-        headStyles: { fillColor:[0,102,166], textColor:255 },
+        headStyles: { fillColor: [0, 102, 166], textColor: 255 },
         styles: { fontSize: 9 },
         body: [
-            ["Laudo","EPB/EBO"],
-            ["Certificado nº", e.aprovacao ?? "-"],
+            ["Laudo", "EPB/EBO"],
+            ["Certificado nº", e.aprovacao],
             ["Mês do Ensaio", e.mes],
             ["Regional", e.regional],
             ["Localidade", e.localidade],
@@ -324,33 +321,37 @@ async function gerarPDF(eEncoded) {
 
     y = doc.lastAutoTable.finalY + 10;
 
+    /* ==============================
+       IMAGEM DO EQUIPAMENTO + LEGENDA
+    =============================== */
     let img = getImagemEquipamento(e.equipamentos);
-if (img) {
+    if (img) {
 
-    const imgX = 150;
-    const imgY = y;
-    const imgW = 40;
-    const imgH = 40;
+        const imgX = 150;
+        const imgY = y;
+        const imgW = 40;
+        const imgH = 40;
 
-    await addImage(img, imgX, imgY, imgW, imgH);
+        await addImage(img, imgX, imgY, imgW, imgH);
 
-    // Texto abaixo da imagem
-    doc.setFontSize(7);
-    doc.text(
-        "*Imagem meramente ilustrativa",
-        imgX + imgW / 2,
-        imgY + imgH + 4,
-        { align: "center" }
-    );
-}
+        doc.setFontSize(7);
+        doc.text(
+            "*Imagem meramente ilustrativa",
+            imgX + imgW / 2,
+            imgY + imgH + 4,
+            { align: "center" }
+        );
+    }
+
+    /* ============================== */
 
     doc.autoTable({
         startY: y,
         tableWidth: 120,
         margin: { left: 14 },
-        head: [["Campo","Valor"]],
-        headStyles: { fillColor:[255,165,0], textColor:0 },
-        styles:{ fontSize:9 },
+        head: [["Campo", "Valor"]],
+        headStyles: { fillColor: [255, 165, 0], textColor: 0 },
+        styles: { fontSize: 9 },
         body: [
             ["Equipamento", e.equipamentos],
             ["Tipo de Ensaio", e.tipo_ensaio],
@@ -370,56 +371,57 @@ if (img) {
 
     doc.autoTable({
         startY: y,
-        head: [["Código","Rastreamento","Corrente de Fuga","Resultado"]],
-        styles:{ fontSize:9 },
-        headStyles:{ fillColor:[0,102,166], textColor:255 },
+        head: [["Código", "Rastreamento", "Corrente de Fuga", "Resultado"]],
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [0, 102, 166], textColor: 255 },
         body: rows,
-        margin:{ left:14, right:14 }
+        margin: { left: 14, right: 14 }
     });
 
     y = doc.lastAutoTable.finalY + 10;
 
-    doc.setFont("Helvetica","bold").setFontSize(10);
+    doc.setFont("Helvetica", "bold").setFontSize(10);
     doc.text("Observações", 14, y);
-    y += 4;
-    doc.line(14, y, pageWidth-14, y);
     y += 6;
 
-    doc.setFontSize(8.5);
-    const obs = [
+    doc.setFont("Helvetica", "normal").setFontSize(8.5);
+
+    [
         "• Os EPI’s e EPC’s com código de rastreio correspondente ao laudo estão aprovados para uso.",
         "• Ensaio de Tensão Aplicada: Verifica a capacidade dielétrica sem rompimento.",
         "• ART do Ensaio Dielétrico: -",
         "• Equipamento Utilizado: Testador EEAT – AT120050CADMT2SAURS232.",
         "• Ambiente: Temperatura 30°C | Umidade 50% | Pressão 970 mbar",
         "• Incertezas: Tensão ±0,05% | Corrente ±0,01%"
-    ];
-
-    obs.forEach(l => {
+    ].forEach(l => {
         doc.text(l, 14, y);
         y += 5;
     });
 
     y += 12;
-    doc.text("__________________________________________", pageWidth/2, y, { align:"center" });
+
+    doc.text("__________________________________________", pageWidth / 2, y, { align: "center" });
     y += 5;
-    doc.setFont("Helvetica","bold");
-    doc.text("Wesley Fernandes de Souza", pageWidth/2, y, { align:"center" });
+
+    doc.setFont("Helvetica", "bold");
+    doc.text("Wesley Fernandes de Souza", pageWidth / 2, y, { align: "center" });
     y += 5;
-    doc.setFont("Helvetica","normal");
-    doc.text("Responsável Técnico – CREA-PB: 1605187852", pageWidth/2, y, { align:"center" });
+
+    doc.setFont("Helvetica", "normal");
+    doc.text("Responsável Técnico – CREA-PB: 1605187852", pageWidth / 2, y, { align: "center" });
 
     doc.save(`laudo_${e.id}.pdf`);
 }
 
 /* ============================================================
-   INICIALIZAR
+   INICIAR
 ============================================================ */
 (async () => {
     await carregarImagensGitHub();
     carregar();
 })();
 </script>
+
 
 
 
