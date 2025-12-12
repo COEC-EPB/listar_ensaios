@@ -108,343 +108,306 @@
 
 <script>
 /* ============================================================
-   NORMALIZAR TEXTO (sem acentos, UPPERCASE)
+   1. NORMALIZAR TEXTO (sem acentos, UPPERCASE)
 ============================================================ */
 function normalizar(str) {
-  if (!str) return "";
-  return str
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // tira acentos
-    .toUpperCase()
-    .trim();
+    if (!str) return "";
+    return str
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "") 
+        .toUpperCase()
+        .trim();
 }
 
 /* ============================================================
-   CARREGAR IMAGENS DO REPO (mapa automático)
+   2. CARREGAR AUTOMATICAMENTE TODAS AS IMAGENS DO REPO
 ============================================================ */
-const GITHUB_API = "https://api.github.com/repos/COEC-EPB/listar_ensaios/contents/";
-const GITHUB_RAW = "https://raw.githubusercontent.com/COEC-EPB/listar_ensaios/main/";
+const GITHUB_API =
+  "https://api.github.com/repos/COEC-EPB/listar_ensaios/contents/";
+
+const GITHUB_RAW =
+  "https://raw.githubusercontent.com/COEC-EPB/listar_ensaios/main/";
 
 let mapaImagens = {};
 
 async function carregarImagensGitHub() {
-  try {
-    const r = await fetch(GITHUB_API);
-    const arquivos = await r.json();
-    arquivos.forEach(arq => {
-      if (!arq.name.match(/\.(png|jpg|jpeg|jfif|tif)$/i)) return;
-      let nomeOriginal = arq.name.replace(/\.(png|jpg|jpeg|jfif|tif)$/i, "");
-      let chave = normalizar(nomeOriginal);
-      mapaImagens[chave] = GITHUB_RAW + encodeURIComponent(arq.name);
-    });
-    // fallback logo local se não existir no repo
-    if (!mapaImagens["ENERGISA"]) mapaImagens["ENERGISA"] = "listar_ensaios/energisa.jfif";
-    console.log("mapaImagens carregado:", Object.keys(mapaImagens).length);
-  } catch (err) {
-    console.warn("Erro ao carregar imagens do GitHub (rate limit ou rede).", err);
-  }
+    try {
+        const r = await fetch(GITHUB_API);
+        const arquivos = await r.json();
+
+        arquivos.forEach(arq => {
+            if (!arq.name.match(/\.(png|jpg|jpeg|jfif|tif)$/i)) return;
+
+            let nomeOriginal = arq.name.replace(/\.(png|jpg|jpeg|jfif|tif)$/i, "");
+            let chave = normalizar(nomeOriginal);
+            mapaImagens[chave] = GITHUB_RAW + encodeURIComponent(arq.name);
+        });
+
+        console.log("Imagens carregadas:", mapaImagens);
+    } catch (err) {
+        console.error("Erro ao carregar imagens:", err);
+    }
 }
 
 function getImagemEquipamento(equipamento) {
-  if (!equipamento) return null;
-  const chave = normalizar(equipamento);
-  return mapaImagens[chave] || null;
+    let chave = normalizar(equipamento);
+    return mapaImagens[chave] || null;
 }
 
 /* ============================================================
-   LISTAGEM DE ENSAIOS
+   3. LISTAGEM DE ENSAIOS
 ============================================================ */
 let ensaiosOriginais = [];
 const API = "https://ensai-dieletrico.pedro-fillype.workers.dev";
 
 async function carregar() {
-  try {
     const r = await fetch(`${API}/listar-ensaios`);
     ensaiosOriginais = await r.json();
     renderizar(ensaiosOriginais);
-  } catch (err) {
-    console.error("Erro ao carregar ensaios:", err);
-    const tbody = document.querySelector("#tabela tbody");
-    if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:16px">Erro ao carregar registros.</td></tr>`;
-  }
 }
 
 function renderizar(lista) {
-  const tbody = document.querySelector("#tabela tbody");
-  if (!tbody) return console.error("Tabela (#tabela tbody) não encontrada no DOM.");
-  tbody.innerHTML = "";
+    const tbody = document.querySelector("#tabela tbody");
+    tbody.innerHTML = "";
 
-  if (!lista || !lista.length) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:16px">Nenhum registro encontrado.</td></tr>`;
-    return;
-  }
+    lista.forEach(e => {
 
-  lista.forEach(e => {
-    const btnAprovar = e.aprovacao
-      ? `<button class="btn" disabled style="background:#ccc;color:#333;border-radius:6px;padding:7px 10px">Aprovado</button>`
-      : `<button class="btn" style="background:#f36f21;color:#fff;border-radius:6px;padding:7px 10px" onclick="abrirModal(${e.id})">Aprovar</button>`;
+        const btnPdf = e.aprovacao
+            ? `<button class='btn btn-primary' onclick='gerarPDF("${encodeURIComponent(JSON.stringify(e))}")'>Gerar PDF</button>`
+            : `<button class='btn btn-primary' onclick='alert("Este ensaio não possui número de certificação. O laudo não pode ser gerado.")'>Gerar PDF</button>`;
 
-    const btnPdf = e.aprovacao
-      ? `<button class='btn btn-primary' onclick='gerarPDF("${encodeURIComponent(JSON.stringify(e))}")'>Gerar PDF</button>`
-      : `<button class='btn btn-primary' onclick='alert("Este ensaio ainda não possui número de certificação. O laudo não pode ser gerado.")'>Gerar PDF</button>`;
+        const btnAprovar = e.aprovacao
+            ? `<button class="btn" disabled style="background:#ccc;color:#333;">Aprovado</button>`
+            : `<button class="btn" style="background:#f36f21;color:#fff;" onclick="abrirModal(${e.id})">Aprovar</button>`;
 
-    tbody.innerHTML += `
-      <tr>
-        <td>${e.id ?? "-"}</td>
-        <td>${e.nome ?? "-"}</td>
-        <td>${e.equipamentos ?? "-"}</td>
-        <td>${e.resultado ?? "-"}</td>
-        <td>${e.aprovacao ?? "-"}</td>
-        <td style="display:flex;gap:6px;align-items:center">${btnPdf}${btnAprovar}</td>
-      </tr>
-    `;
-});
-
-/* ============================================================
-   FILTROS / BUSCA
-============================================================ */
-function aplicarFiltros() {
-  const nome = (document.getElementById("filtroNome")?.value || "").toLowerCase();
-  const eqp = (document.getElementById("filtroEquipamento")?.value || "").toLowerCase();
-  const aprov = (document.getElementById("filtroAprovacao")?.value || "");
-  const geral = (document.getElementById("buscaGeral")?.value || "").toLowerCase();
-
-  const filtrados = ensaiosOriginais.filter(item => {
-    return (
-      (item.nome || "").toLowerCase().includes(nome) &&
-      (item.equipamentos || "").toLowerCase().includes(eqp) &&
-      (aprov === "" ||
-        (aprov === "-" && !item.aprovacao) ||
-        (aprov === "ap" && item.aprovacao)) &&
-      (geral === "" || JSON.stringify(item).toLowerCase().includes(geral))
-    );
-  });
-
-  renderizar(filtrados);
+        tbody.innerHTML += `
+            <tr>
+                <td>${e.id}</td>
+                <td>${e.nome}</td>
+                <td>${e.equipamentos}</td>
+                <td>${e.resultado}</td>
+                <td>${e.aprovacao ?? '-'}</td>
+                <td style="display:flex;gap:6px;">${btnPdf} ${btnAprovar}</td>
+            </tr>`;
+    });
 }
 
-document.querySelectorAll("#filtroNome, #filtroEquipamento, #filtroAprovacao, #buscaGeral")
-  .forEach(el => el && el.addEventListener("input", aplicarFiltros));
+/* ============================================================
+   4. FILTROS
+============================================================ */
+function aplicarFiltros() {
+    let nome = filtroNome.value.toLowerCase();
+    let eqp = filtroEquipamento.value.toLowerCase();
+    let aprov = filtroAprovacao.value;
+    let geral = buscaGeral.value.toLowerCase();
+
+    let filtrados = ensaiosOriginais.filter(e => {
+        return (
+            e.nome.toLowerCase().includes(nome) &&
+            e.equipamentos.toLowerCase().includes(eqp) &&
+            (aprov === "" ||
+             (aprov === "-" && !e.aprovacao) ||
+             (aprov === "ap" && e.aprovacao)) &&
+            (geral === "" || JSON.stringify(e).toLowerCase().includes(geral))
+        );
+    });
+
+    renderizar(filtrados);
+}
+
+document.querySelectorAll("#filtroNome,#filtroEquipamento,#filtroAprovacao,#buscaGeral")
+    .forEach(el => el.addEventListener("input", aplicarFiltros));
 
 /* ============================================================
-   MODAL DE APROVAÇÃO
+   5. MODAL DE APROVAÇÃO
 ============================================================ */
 let ensaioSelecionado = null;
 
 function abrirModal(id) {
-  ensaioSelecionado = id;
-  const modal = document.getElementById("modal");
-  const input = document.getElementById("numeroAprovacao");
-  if (input) input.value = ""; // limpa campo sempre que abrir
-  if (modal) modal.style.display = "flex";
+    ensaioSelecionado = id;
+    modal.style.display = "flex";
 }
 
 function fecharModal() {
-  const modal = document.getElementById("modal");
-  if (modal) modal.style.display = "none";
+    modal.style.display = "none";
 }
 
-/* ============================
-   SALVAR APROVAÇÃO
-============================ */
 async function salvarAprovacao() {
-  const aprov = document.getElementById("numeroAprovacao")?.value?.trim();
-  if (!aprov) return alert("Informe o número de aprovação antes de salvar.");
-  if (!ensaioSelecionado) return alert("Nenhum ensaio selecionado.");
+    const aprov = document.getElementById("numeroAprovacao").value.trim();
 
-  try {
-    const res = await fetch(`${API}/salvar-aprovacao`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: ensaioSelecionado, aprovacao: aprov })
-    });
-    const json = await res.json();
-    if (res.ok) {
-      alert(json.message || "Aprovação salva com sucesso!");
-      fecharModal();
-      await carregar();
-    } else {
-      alert(json.error || "Erro ao salvar aprovação");
+    if (!aprov) {
+        alert("Digite o número de aprovação antes de salvar.");
+        return;
     }
-  } catch (err) {
-    console.error("Erro ao salvar aprovação:", err);
-    alert("Erro ao salvar aprovação (ver console).");
-  }
+
+    await fetch(`${API}/salvar-aprovacao`, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ id: ensaioSelecionado, aprovacao: aprov })
+    });
+
+    fecharModal();
+    carregar();
 }
 
 /* ============================================================
-   GERAR PDF (cliente)
-   - recebe objeto serializado e codificado
-   - adiciona legenda "Imagem meramente ilustrativa" abaixo da imagem
+   6. GERAR PDF 
 ============================================================ */
 async function gerarPDF(eEncoded) {
-  const e = JSON.parse(decodeURIComponent(eEncoded));
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: "mm", format: "a4" });
-  const pageWidth = doc.internal.pageSize.getWidth();
 
-  // meses e formatação
-  const meses = [
-    "01 - JANEIRO","02 - FEVEREIRO","03 - MARÇO","04 - ABRIL",
-    "05 - MAIO","06 - JUNHO","07 - JULHO","08 - AGOSTO",
-    "09 - SETEMBRO","10 - OUTUBRO","11 - NOVEMBRO","12 - DEZEMBRO"
-  ];
-  const dataFormatada = e.data ? new Date(e.data).toLocaleDateString("pt-BR") : "";
-  const mes = e.data ? meses[new Date(e.data).getMonth()] : "";
+    const e = JSON.parse(decodeURIComponent(eEncoded));
 
-  async function addImage(path, x, y, w, h) {
-    if (!path) return false;
-    try {
-      const res = await fetch(path);
-      if (!res.ok) return false;
-      const blob = await res.blob();
-      const reader = new FileReader();
-      return new Promise(resolve => {
-        reader.onload = () => {
-          const base64 = reader.result;
-          const mime = base64.split(",")[0].match(/data:(image\/[a-zA-Z]+);/);
-          const fmt = mime && /png/i.test(mime[1]) ? "PNG" : "JPEG";
-          try {
-            doc.addImage(base64, fmt, x, y, w, h);
-            resolve(true);
-          } catch (err) {
-            console.warn("addImage falhou (formato não suportado?):", err);
-            resolve(false);
-          }
-        };
-        reader.readAsDataURL(blob);
-      });
-    } catch (err) {
-      return false;
+    // BLOQUEAR CASO NÃO TENHA APROVAÇÃO
+    if (!e.aprovacao) {
+        alert("Este ensaio não possui número de certificação. O laudo não pode ser gerado.");
+        return;
     }
-  }
 
-  // header (logo)
-  const logoPath = mapaImagens["ENERGISA"] || "listar_ensaios/energisa.jfif";
-  await addImage(logoPath, 14, 8, 30, 18).catch(()=>{});
-  doc.setFontSize(16).setFont("Helvetica", "bold");
-  doc.text("LAUDO DE ENSAIO DIELÉTRICO", pageWidth/2, 16, { align: "center" });
+    // DEFINIR MÊS AUTOMÁTICO
+    const meses = [
+        "01 - JANEIRO","02 - FEVEREIRO","03 - MARÇO","04 - ABRIL",
+        "05 - MAIO","06 - JUNHO","07 - JULHO","08 - AGOSTO",
+        "09 - SETEMBRO","10 - OUTUBRO","11 - NOVEMBRO","12 - DEZEMBRO"
+    ];
 
-  let y = 30;
+    const dataObj = new Date(e.data);
+    e.mes = meses[dataObj.getMonth()];
 
-  // cabeçalho reduzido
-  doc.autoTable({
-    startY: y,
-    tableWidth: 150,
-    margin: { left: 14 },
-    head: [["Laudo", "Valor"]],
-    headStyles: { fillColor: [0,102,166], textColor: 255 },
-    styles: { fontSize: 9 },
-    body: [
-      ["Laudo", "EPB/EBO"],
-      ["Certificado nº", e.aprovacao ?? "-"],
-      ["Mês do Ensaio", mes],
-      ["Regional", e.regional ?? "-"],
-      ["Localidade", e.localidade ?? "-"],
-      ["Departamento", e.departamento ?? "-"]
-    ]
-  });
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
 
-  y = doc.lastAutoTable.finalY + 10;
+    async function addImage(path, x, y, w, h) {
+        try {
+            const res = await fetch(path);
+            const blob = await res.blob();
+            const reader = new FileReader();
 
-  // imagem do equipamento (direita) + legenda se adicionada
-  const imgX = 150, imgY = y, imgW = 40, imgH = 40;
-  const caminhoImg = getImagemEquipamento(e.equipamentos);
-  const added = caminhoImg ? await addImage(caminhoImg, imgX, imgY, imgW, imgH) : false;
-  if (added) {
-    doc.setFont("Helvetica", "italic");
-    doc.setFontSize(7.5);
-    doc.text("Imagem meramente ilustrativa", imgX + imgW/2, imgY + imgH + 4, { align: "center" });
-    doc.setFont("Helvetica", "normal");
-    doc.setFontSize(9);
-  }
+            return new Promise(resolve => {
+                reader.onload = () => {
+                    const base64 = reader.result;
+                    const ext = path.split('.').pop().toUpperCase();
+                    doc.addImage(base64, ext === "PNG" ? "PNG" : "JPEG", x, y, w, h);
+                    resolve(true);
+                };
+                reader.readAsDataURL(blob);
+            });
+        } catch {
+            return false;
+        }
+    }
 
-  // tabela laranja esquerda
-  doc.autoTable({
-    startY: y,
-    tableWidth: 120,
-    margin: { left: 14 },
-    head: [["Campo", "Valor"]],
-    headStyles: { fillColor: [243,111,33], textColor: 255 },
-    styles: { fontSize: 9 },
-    body: [
-      ["Equipamento", e.equipamentos ?? "-"],
-      ["Tipo de Ensaio", e.tipo_ensaio ?? "-"],
-      ["Norma Aplicada", e.norma ?? "-"]
-    ]
-  });
+    const pageWidth = doc.internal.pageSize.getWidth();
 
-  y = Math.max(doc.lastAutoTable.finalY, imgY + (added ? imgH + 8 : 0)) + 10;
+    await addImage(mapaImagens["ENERGISA"], 14, 8, 30, 18);
 
-  // tabela de códigos
-  const ini = Number(e.cod_inicial || 0);
-  const fim = Number(e.cod_final || ini);
-  const rows = [];
-  for (let i = ini; i <= fim; i++) rows.push([String(i), String(i), `${e.corrente_fuga} µA`, (e.resultado || "").toUpperCase()]);
+    doc.setFontSize(16).setFont("Helvetica","bold");
+    doc.text("LAUDO DE ENSAIO DIELÉTRICO", pageWidth/2, 16, { align:"center" });
 
-  doc.autoTable({
-    startY: y,
-    head: [["Código", "Rastreamento", "Corrente de Fuga", "Resultado"]],
-    styles: { fontSize: 9 },
-    headStyles: { fillColor: [0,102,166], textColor: 255 },
-    body: rows,
-    margin: { left: 14, right: 14 }
-  });
+    let y = 30;
 
-  y = doc.lastAutoTable.finalY + 10;
+    doc.autoTable({
+        startY: y,
+        tableWidth: 150,
+        margin: { left: 14 },
+        head: [["Laudo", "Valor"]],
+        headStyles: { fillColor:[0,102,166], textColor:255 },
+        styles: { fontSize: 9 },
+        body: [
+            ["Laudo","EPB/EBO"],
+            ["Certificado nº", e.aprovacao ?? "-"],
+            ["Mês do Ensaio", e.mes],
+            ["Regional", e.regional],
+            ["Localidade", e.localidade],
+            ["Departamento", e.departamento]
+        ]
+    });
 
-  // observações
-  doc.setFont("Helvetica", "bold").setFontSize(10);
-  doc.text("Observações", 14, y);
-  y += 4;
-  doc.line(14, y, pageWidth - 14, y);
-  y += 6;
+    y = doc.lastAutoTable.finalY + 10;
 
-  doc.setFont("Helvetica", "normal").setFontSize(8.5);
-  const obs = [
-    "• Os EPI’s e EPC’s com código de rastreio correspondente ao laudo estão aprovados para uso em campo.",
-    "• Ensaio de Tensão Aplicada: Verifica a capacidade dielétrica sem rompimento ou excesso de corrente.",
-    "• ART do Ensaio Dielétrico: -",
-    "• Equipamento Utilizado: Testador de Alta Tensão EEAT – AT120050CADMT2SAURS232.",
-    "• Condições Ambientais: Temperatura: 30°C | Umidade: 50% | Pressão: 970 mbar",
-    "• Observações gerais: Incerteza de tensão: ±0,05% | Incerteza de corrente: ±0,01%"
-  ];
-  for (const line of obs) {
-    doc.text(line, 14, y);
+    let img = getImagemEquipamento(e.equipamentos);
+    if (img) {
+        await addImage(img, 150, y, 40, 40);
+        doc.setFontSize(7);
+        doc.text("*Imagem meramente ilustrativa", 150, y + 45);
+    }
+
+    doc.autoTable({
+        startY: y,
+        tableWidth: 120,
+        margin: { left: 14 },
+        head: [["Campo","Valor"]],
+        headStyles: { fillColor:[255,165,0], textColor:0 },
+        styles:{ fontSize:9 },
+        body: [
+            ["Equipamento", e.equipamentos],
+            ["Tipo de Ensaio", e.tipo_ensaio],
+            ["Norma Aplicada", e.norma]
+        ]
+    });
+
+    y = doc.lastAutoTable.finalY + 12;
+
+    const ini = Number(e.cod_inicial);
+    const fim = Number(e.cod_final);
+    const rows = [];
+
+    for (let i = ini; i <= fim; i++) {
+        rows.push([i, i, `${e.corrente_fuga} µA`, e.resultado.toUpperCase()]);
+    }
+
+    doc.autoTable({
+        startY: y,
+        head: [["Código","Rastreamento","Corrente de Fuga","Resultado"]],
+        styles:{ fontSize:9 },
+        headStyles:{ fillColor:[0,102,166], textColor:255 },
+        body: rows,
+        margin:{ left:14, right:14 }
+    });
+
+    y = doc.lastAutoTable.finalY + 10;
+
+    doc.setFont("Helvetica","bold").setFontSize(10);
+    doc.text("Observações", 14, y);
+    y += 4;
+    doc.line(14, y, pageWidth-14, y);
+    y += 6;
+
+    doc.setFontSize(8.5);
+    const obs = [
+        "• Os EPI’s e EPC’s com código de rastreio correspondente ao laudo estão aprovados para uso.",
+        "• Ensaio de Tensão Aplicada: Verifica a capacidade dielétrica sem rompimento.",
+        "• ART do Ensaio Dielétrico: -",
+        "• Equipamento Utilizado: Testador EEAT – AT120050CADMT2SAURS232.",
+        "• Ambiente: Temperatura 30°C | Umidade 50% | Pressão 970 mbar",
+        "• Incertezas: Tensão ±0,05% | Corrente ±0,01%"
+    ];
+
+    obs.forEach(l => {
+        doc.text(l, 14, y);
+        y += 5;
+    });
+
+    y += 12;
+    doc.text("__________________________________________", pageWidth/2, y, { align:"center" });
     y += 5;
-    if (y > doc.internal.pageSize.height - 60) {
-      doc.addPage();
-      y = 20;
-    }
-  }
+    doc.setFont("Helvetica","bold");
+    doc.text("Wesley Fernandes de Souza", pageWidth/2, y, { align:"center" });
+    y += 5;
+    doc.setFont("Helvetica","normal");
+    doc.text("Responsável Técnico – CREA-PB: 1605187852", pageWidth/2, y, { align:"center" });
 
-  // assinatura
-  y += 12;
-  if (y > doc.internal.pageSize.height - 30) {
-    doc.addPage();
-    y = 30;
-  }
-  doc.setFontSize(10);
-  doc.text("__________________________________________", pageWidth/2, y, { align: "center" });
-  y += 6;
-  doc.setFont("Helvetica", "bold");
-  doc.text("Wesley Fernandes de Souza", pageWidth/2, y, { align: "center" });
-  y += 5;
-  doc.setFont("Helvetica", "normal");
-  doc.setFontSize(9);
-  doc.text("Responsável Técnico – CREA-PB: 1605187852", pageWidth/2, y, { align: "center" });
-
-  doc.save(`laudo_${e.id || Date.now()}.pdf`);
+    doc.save(`laudo_${e.id}.pdf`);
 }
 
 /* ============================================================
-   INICIALIZAÇÃO
+   INICIALIZAR
 ============================================================ */
 (async () => {
-  await carregarImagensGitHub();
-  await carregar();
+    await carregarImagensGitHub();
+    carregar();
 })();
 </script>
+
 
 
 
