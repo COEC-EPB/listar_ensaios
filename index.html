@@ -183,7 +183,7 @@ function renderizar(lista) {
     // botão de aprovar aparece quando não há campo aprovacao preenchido
     const btnAprovar = e.aprovacao
       ? `<button class="btn" disabled style="background:#ccc;color:#333;border-radius:6px;padding:7px 10px">Aprovado</button>`
-      : `<button class="btn" style="background:#f36f21;color:#fff;border-radius:6px;padding:7px 10px" onclick="abrirModal(${e.id})">Aprovar</button>`;
+      : `<button class="btn" style="background:#f36f21;color:#fff;border-radius:6px;padding:7px 10px" onclick="abrirModal(${e.id})">N° do certificado</button>`;
 
     // botão gerar pdf sempre presente (usa encodeURIComponent para evitar problemas)
     const btnPdf = `<button class='btn btn-primary' onclick='gerarPDF("${encodeURIComponent(JSON.stringify(e))}")'>Gerar PDF</button>`;
