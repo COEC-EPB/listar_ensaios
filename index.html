@@ -107,76 +107,61 @@
 </div>
 
 <script>
-/* ================================
-   NORMALIZAÇÃO (remove acentos, uppercase)
-================================ */
+/* ============================================================
+   1. NORMALIZAR TEXTO (sem acentos, UPPERCASE)
+============================================================ */
 function normalizar(str) {
-    if (!str && str !== "") return "";
-    return String(str)
+    if (!str) return "";
+    return str
         .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[\u0300-\u036f]/g, "") // tira acentos
         .toUpperCase()
         .trim();
 }
 
-/* ==========================================
-   MAPA COMPLETO DE IMAGENS POR EQUIPAMENTO
-   (chaves serão transformadas para normalizadas)
-========================================== */
-const BASE = "https://raw.githubusercontent.com/COEC-EPB/listar_ensaios/main/";
+/* ============================================================
+   2. CARREGAR AUTOMATICAMENTE TODAS AS IMAGENS DO REPO
+============================================================ */
+const GITHUB_API =
+  "https://api.github.com/repos/COEC-EPB/listar_ensaios/contents/";
 
-const imagensEquipamentos = {
-    "ANDAIME ISOLANTE": BASE + "ANDAIME%20ISOLANTE.jpg",
-    "ATERRAMENTO MT": BASE + "ATERRAMENTO%20MT.jpg",
-    "BANQUETA ISOLADA": BASE + "BANQUETA%20ISOLADA.png",
-    "BASTAO ASPIRAL": BASE + "BAST%C3%83O%20ASPIRAL.jpg",
-    "BASTAO DE BERCO": BASE + "BAST%C3%83O%20DE%20BER%C3%87O.jpg",
-    "BASTAO DE TRACAO": BASE + "BAST%C3%83O%20DE%20TRA%C3%87%C3%83O.jpg",
-    "BASTAO GARRA": BASE + "BAST%C3%83O%20GARRA.jpg",
-    "BASTAO LISO": BASE + "BAST%C3%83O%20LISO.tif",
-    "BASTAO PEGA TUDO": BASE + "BAST%C3%83O%20PEGA%20TUDO.jpg",
-    "BASTAO SEPARADOR DE CORDA": BASE + "BAST%C3%83O%20SEPARADOR%20DE%20CORDA.jpg",
-    "BASTAO SUPORTE BY PASS": BASE + "BAST%C3%83O%20SUPORTE%20BY%20PASS.jpg",
-    "BASTAO TENSOR": BASE + "BAST%C3%83O%20TENSOR.jpg",
-    "BASTAO UNIVERSAL": BASE + "BAST%C3%83O%20UNIVERSAL.jpg",
-    "BASTAO VARA DE MANOBRA": BASE + "BAST%C3%83O%20VARA%20DE%20MANOBRA.jpg",
-    "BASTAO VARA TELESCOPICA": BASE + "BAST%C3%83O%20VARA%20TELESC%C3%93PICA.jpg",
-    "BY PASS DE TP": BASE + "BY%20PASS%20DE%20TP.jpg",
-    "BY PASS": BASE + "BY%20PASS.jpg",
-    "CAPACETE SEGURANCA": BASE + "CAPACETE%20SEGURAN%C3%87A.jpg",
-    "COBERTURA CIRCULAR": BASE + "COBERTURA%20CIRCULAR.png",
-    "COBERTURA DE COND FLEXIVEL": BASE + "COBERTURA%20DE%20COND.%20FLEXIVEL.jpg",
-    "COBERTURA DE COND RIGIDA": BASE + "COBERTURA%20DE%20COND.%20RIGIDA.jpg",
-    "DAC - DISPOSITIVO ABERTURA COM CARGA": BASE + "DAC%20-%20DISPOSITIVO%20ABERTURA%20COM%20CARGA.png",
-    "LENCO ISOLANTE LV": BASE + "LEN%C3%87O%20ISOLANTE%20LV.jpg",
-    "LUVA ISOLANTE BT": BASE + "LUVA%20ISOLANTE%20BT.jpg",
-    "LUVA ISOLANTE MT": BASE + "LUVA%20ISOLANTE%20MT.jpg",
-    "LUVA ISOLANTE SED": BASE + "LUVA%20ISOLANTE%20SED.jpg",
-    "MANGA ISOLANTE BT": BASE + "MANGA%20ISOLANTE%20BT.jpg",
-    "MANGA ISOLANTE MT": BASE + "MANGA%20ISOLANTE%20MT.jpg",
-    "MANTA ISOLANTE BT": BASE + "MANTA%20ISOLANTE%20BT.jpg",
-    "SEPARADOR DE ESCADA": BASE + "SEPARADOR%20DE%20ESCADA.jpg",
-    "SKY LANCA CLASSE A - 138 KW": BASE + "SKY%20LAN%C3%87A%20CLASSE%20A%20-%20138%20KW.jfif",
-    "SKY LANCA CLASSE B - 69 KW": BASE + "SKY%20LAN%C3%87A%20CLASSE%20B%20-%2069%20KW.jfif",
-    "SKY LANCA CLASSE C - 46 KW": BASE + "SKY%20LAN%C3%87A%20CLASSE%20C%20-%2046%20KW.jfif",
-    "TALHA": BASE + "TALHA.jpg",
-    "TESOURAO PEQUENO": BASE + "TESOUR%C3%83O%20PEQUENO.jpg",
+const GITHUB_RAW =
+  "https://raw.githubusercontent.com/COEC-EPB/listar_ensaios/main/";
 
-    "ENERGISA": BASE + "energisa.jfif"
-};
+let mapaImagens = {};
 
-/* criar mapa normalizado para lookup rápido */
-const mapaNormalizado = {};
-for (const k in imagensEquipamentos) {
-    mapaNormalizado[ normalizar(k) ] = imagensEquipamentos[k];
+async function carregarImagensGitHub() {
+    try {
+        const r = await fetch(GITHUB_API);
+        const arquivos = await r.json();
+
+        arquivos.forEach(arq => {
+            if (!arq.name.match(/\.(png|jpg|jpeg|jfif|tif)$/i)) return;
+
+            let nomeOriginal = arq.name.replace(/\.(png|jpg|jpeg|jfif|tif)$/i, "");
+
+            // exemplo: "BASTÃO LISO" → normalizar → "BASTAO LISO"
+            let chave = normalizar(nomeOriginal);
+
+            // usamos encodeURIComponent para gerar URL RAW correta
+            mapaImagens[chave] = GITHUB_RAW + encodeURIComponent(arq.name);
+        });
+
+        console.log("Imagens carregadas com sucesso:", mapaImagens);
+    } catch (err) {
+        console.error("Erro ao carregar imagens:", err);
+    }
 }
 
-/* ================================
-   CONTROLE PRINCIPAL
-================================ */
-let ensaiosOriginais = [];
-let ensaioSelecionado = null;
+function getImagemEquipamento(equipamento) {
+    let chave = normalizar(equipamento);
+    return mapaImagens[chave] || null;
+}
 
+/* ============================================================
+   3. LISTAGEM DE ENSAIOS
+============================================================ */
+let ensaiosOriginais = [];
 const API = "https://ensai-dieletrico.pedro-fillype.workers.dev";
 
 async function carregar() {
@@ -197,16 +182,14 @@ function renderizar(lista) {
             <td>${e.equipamentos}</td>
             <td>${e.resultado}</td>
             <td>${e.aprovacao ?? '-'}</td>
-            <td>
-                <button class='btn btn-primary' onclick='gerarPDF(${JSON.stringify(e)})'>
-                    Gerar PDF
-                </button>
-            </td>
+            <td><button class='btn btn-primary' onclick='gerarPDF(${JSON.stringify(e)})'>Gerar PDF</button></td>
         </tr>`;
     });
 }
 
-/* FILTROS */
+/* ============================================================
+   4. FILTROS
+============================================================ */
 function aplicarFiltros() {
     let nome = filtroNome.value.toLowerCase();
     let eqp = filtroEquipamento.value.toLowerCase();
@@ -220,8 +203,7 @@ function aplicarFiltros() {
             (aprov === "" ||
              (aprov === "-" && !e.aprovacao) ||
              (aprov === "ap" && e.aprovacao)) &&
-            (geral === "" ||
-             JSON.stringify(e).toLowerCase().includes(geral))
+            (geral === "" || JSON.stringify(e).toLowerCase().includes(geral))
         );
     });
 
@@ -230,6 +212,11 @@ function aplicarFiltros() {
 
 document.querySelectorAll("#filtroNome, #filtroEquipamento, #filtroAprovacao, #buscaGeral")
 .forEach(el => el.addEventListener("input", aplicarFiltros));
+
+/* ============================================================
+   5. MODAL DE APROVAÇÃO
+============================================================ */
+let ensaioSelecionado = null;
 
 function abrirModal(id) {
     ensaioSelecionado = id;
@@ -240,9 +227,6 @@ function fecharModal() {
     modal.style.display = "none";
 }
 
-/* ============================
-   SALVAR APROVAÇÃO
-============================ */
 async function salvarAprovacao() {
     const aprov = document.getElementById("numeroAprovacao").value;
 
@@ -256,109 +240,78 @@ async function salvarAprovacao() {
     carregar();
 }
 
-/* ============================
-   GERAR PDF (MODELO EXATO)
-============================ */
+/* ============================================================
+   6. GERAR PDF COM IMAGEM AUTOMÁTICA
+============================================================ */
 async function gerarPDF(e) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: "mm", format: "a4" });
 
-    /* ========== helpers ========== */
-    function addImageFromPath(path, x, y, w, h) {
-        return new Promise(async (resolve) => {
-            try {
-                const res = await fetch(path);
-                if (!res.ok) return resolve(false);
-                const blob = await res.blob();
-                const reader = new FileReader();
+    /* ===========================
+       Função para carregar imagem
+    ============================ */
+    async function addImage(path, x, y, w, h) {
+        try {
+            const res = await fetch(path);
+            const blob = await res.blob();
+            const reader = new FileReader();
+
+            return new Promise(resolve => {
                 reader.onload = () => {
                     const base64 = reader.result;
-                    // detect image type
-                    const mime = base64.split(",")[0].match(/data:(image\/[a-zA-Z]+);/);
-                    const format = mime ? mime[1].split("/")[1].toUpperCase() : "JPEG";
-                    doc.addImage(base64, format, x, y, w, h);
+                    const ext = path.split('.').pop().toUpperCase();
+                    doc.addImage(base64, ext === "PNG" ? "PNG" : "JPEG", x, y, w, h);
                     resolve(true);
                 };
                 reader.readAsDataURL(blob);
-            } catch (err) {
-                resolve(false);
-            }
-        });
+            });
+        } catch {
+            return false;
+        }
     }
 
-    /* formatar data e mês */
-    const dataFormatada = e.data ? new Date(e.data).toLocaleDateString("pt-BR") : "";
-    const meses = [
-        "01 - JANEIRO","02 - FEVEREIRO","03 - MARÇO","04 - ABRIL",
-        "05 - MAIO","06 - JUNHO","07 - JULHO","08 - AGOSTO",
-        "09 - SETEMBRO","10 - OUTUBRO","11 - NOVEMBRO","12 - DEZEMBRO"
-    ];
-    const mes = e.data ? meses[new Date(e.data).getMonth()] : "";
-
-    /* === HEADER: logo + título centralizado === */
+    /* HEADER */
     const pageWidth = doc.internal.pageSize.getWidth();
-    let y = 12;
 
-    // logo energisa (pequena, canto esquerdo)
-    const logoPath = mapaNormalizado[ normalizar("ENERGISA") ] || "listar_ensaios/energisa.jfif";
-    await addImageFromPath(logoPath, 14, 8, 28, 18).catch(()=>{});
+    await addImage(mapaImagens["ENERGISA"], 14, 8, 30, 18);
 
-    doc.setFontSize(16);
-    doc.setFont("Helvetica", "bold");
-    doc.text("LAUDO DE ENSAIO DIELÉTRICO", pageWidth/2, y, { align: "center" });
-    y += 8;
+    doc.setFontSize(16).setFont("Helvetica","bold");
+    doc.text("LAUDO DE ENSAIO DIELÉTRICO", pageWidth/2, 16, { align:"center" });
 
-    // espaço antes da tabela de cabeçalho
-    y += 4;
+    let y = 30;
 
-    /* === TABELA CABEÇALHO (menor largura) === */
+    /* CABEÇALHO */
     doc.autoTable({
         startY: y,
-        theme: "grid",
-        tableWidth: 140,       // tabela mais estreita
+        tableWidth: 150,
         margin: { left: 14 },
-        styles: { fontSize: 9, cellPadding: 2 },
         head: [["Laudo", "Valor"]],
-        headStyles: { fillColor: [0,102,166], textColor: 255, halign: "center" },
+        headStyles: { fillColor:[0,102,166], textColor:255 },
+        styles: { fontSize: 9 },
         body: [
-            ["Laudo", "EPB/EBO"],
+            ["Laudo","EPB/EBO"],
             ["Certificado nº", e.aprovacao ?? "-"],
-            ["Mês do Ensaio", mes],
+            ["Mês do Ensaio", e.mes],
             ["Regional", e.regional],
-            ["Localidade", "João Pessoa"],
+            ["Localidade", e.localidade],
             ["Departamento", e.departamento]
         ]
     });
 
-    let afterHeaderY = doc.lastAutoTable.finalY + 6;
+    y = doc.lastAutoTable.finalY + 10;
 
-    /* === DOIS BLOCOS: imagem (direita) e info (esquerda) ===
-       - deixamos espaço para imagem acima da pequena tabela
-       - imagem posicionada em x ~120
-    */
-    const imgX = 120;
-    const imgY = afterHeaderY;
-    const imgW = 66;
-    const imgH = 66;
+    /* IMAGEM DO EQUIPAMENTO */
+    let img = getImagemEquipamento(e.equipamentos);
+    if (img) await addImage(img, 150, y, 40, 40);
 
-    const caminhoImg = getImagemEquipamento(e.equipamentos);
-
-    if (caminhoImg) {
-        // add image (se possível)
-        await addImageFromPath(caminhoImg, imgX, imgY, imgW, imgH).catch(()=>{});
-    } else {
-        // se não tiver a imagem, pode ser deixado em branco
-    }
-
-    // pequena tabela de informações do equipamento (à esquerda da imagem)
+    /* TABELA LARANJA DO EQUIPAMENTO */
     doc.autoTable({
-        startY: afterHeaderY,
-        theme: "grid",
-        tableWidth: 90,
+        startY: y,
+        tableWidth: 120,
         margin: { left: 14 },
-        styles: { fontSize: 9, cellPadding: 2 },
-        head: [["Campo", "Valor"]],
-        headStyles: { fillColor: [0,102,166], textColor:255, halign:"center" },
+        head: [["Campo","Valor"]],
+        headStyles: { fillColor:[255,165,0], textColor:0 },
+        styles:{ fontSize:9 },
         body: [
             ["Equipamento", e.equipamentos],
             ["Tipo de Ensaio", e.tipo_ensaio],
@@ -366,176 +319,72 @@ async function gerarPDF(e) {
         ]
     });
 
-    // abaixo da imagem (lado direito) colocamos a tabela menor com tensão/corrente/resultado
-    const infoRightStartY = afterHeaderY + doc.lastAutoTable.finalY - afterHeaderY;
-    // start Y for right small table: align with top of image
-    const rightTableY = afterHeaderY;
+    y = doc.lastAutoTable.finalY + 12;
 
-    doc.autoTable({
-        startY: rightTableY,
-        theme: "grid",
-        tableWidth: 66,
-        margin: { left: imgX },
-        styles: { fontSize: 8.5, cellPadding: 2 },
-        head: [["Campo", "Valor"]],
-        headStyles: { fillColor: [243, 189, 0], textColor: 0, halign:"center" },
-        body: [
-            ["Equipamento", e.equipamentos],
-            ["Tipo de Ensaio", e.tipo_ensaio],
-            ["Norma", e.norma],
-            ["Corrente (µA)", e.corrente_fuga],
-            ["Resultado", e.resultado]
-        ]
-    });
-
-    // ajustar finalY para seguir após ambos blocos
-    let afterBlocksY = Math.max(doc.lastAutoTable.finalY, imgY + imgH) + 10;
-
-    /* === TABELA DE CÓDIGOS (estreita e legível) === */
-    // construir elementos entre cod_inicial e cod_final
-    const ini = Number(e.cod_inicial || e.cod_inicial || 0);
-    const fim = Number(e.cod_final || e.cod_final || ini);
+    /* TABELA COD/RASTREAMENTO */
+    const ini = Number(e.cod_inicial);
+    const fim = Number(e.cod_final);
     const rows = [];
+
     for (let i = ini; i <= fim; i++) {
-        rows.push([String(i), String(i), `${e.corrente_fuga} µA`, e.resultado ? e.resultado.toUpperCase() : ""]);
+        rows.push([i, i, `${e.corrente_fuga} µA`, e.resultado.toUpperCase()]);
     }
 
-    // se muitos elementos, a autotable cuida da quebra e altura
     doc.autoTable({
-        startY: afterBlocksY,
-        theme: "grid",
-        styles: { fontSize: 9, cellPadding: 2 },
-        headStyles: { fillColor: [0,102,166], halign: "center" },
-        head: [["Código", "Rastreamento", "Corrente de Fuga", "Resultado"]],
+        startY: y,
+        head: [["Código","Rastreamento","Corrente de Fuga","Resultado"]],
+        styles:{ fontSize:9 },
+        headStyles:{ fillColor:[0,102,166], textColor:255 },
         body: rows,
-        margin: { left: 14, right: 14 },
-        columnStyles: {
-            0: { cellWidth: 22 }, // código estreito
-            1: { cellWidth: 30 }, // rastreamento
-            2: { cellWidth: 40 }, // corrente
-            3: { cellWidth: 40 }  // resultado
-        }
+        margin:{ left:14, right:14 }
     });
 
-    let afterCodigosY = doc.lastAutoTable.finalY + 6;
+    y = doc.lastAutoTable.finalY + 10;
 
-    // total de elementos
-    doc.setFont("Helvetica", "bold");
-    doc.setFontSize(10);
-    doc.text(`Total de Elementos: ${rows.length}`, 14, afterCodigosY);
-    afterCodigosY += 8;
+    /* OBSERVAÇÕES */
+    doc.setFont("Helvetica","bold").setFontSize(10);
+    doc.text("Observações", 14, y);
+    y += 4;
+    doc.line(14, y, pageWidth-14, y);
+    y += 6;
 
-    /* === OBSERVAÇÕES (menor e em negrito para títulos) === */
-    doc.setFont("Helvetica", "bold");
-    doc.setFontSize(11);
-    doc.text("Observações", 14, afterCodigosY);
-    afterCodigosY += 5;
-    doc.setDrawColor(0);
-    doc.setLineWidth(0.3);
-    doc.line(14, afterCodigosY, pageWidth - 14, afterCodigosY);
-    afterCodigosY += 6;
-
-    doc.setFont("Helvetica", "normal");
     doc.setFontSize(8.5);
-    const obsLines = [
+    const obs = [
         "• Os EPI’s e EPC’s com código de rastreio correspondente ao laudo estão aprovados para uso em campo.",
         "• Ensaio de Tensão Aplicada: Verifica a capacidade dielétrica sem rompimento ou excesso de corrente.",
         "• ART do Ensaio Dielétrico: -",
-        "• Equipamento Utilizado: Testador de Alta Tensão EEAT – Modelo AT120050CADMT2SAURS232. Certificado Co315225 (Fev/2025) – Aprovado.",
+        "• Equipamento Utilizado: Testador de Alta Tensão EEAT – AT120050CADMT2SAURS232.",
         "• Condições Ambientais: Temperatura: 30°C | Umidade: 50% | Pressão: 970 mbar",
-        "• Observações gerais: Incerteza na medição de Tensão: +/- 0,05% | Incerteza na medição de Corrente: +/- 0,01%"
+        "• Observações gerais: Incerteza de tensão: ±0,05% | Incerteza de corrente: ±0,01%"
     ];
-    obsLines.forEach(l => {
-        doc.text(l, 14, afterCodigosY);
-        afterCodigosY += 5;
-        // quebra de página se necessário
-        if (afterCodigosY > doc.internal.pageSize.height - 40) {
-            doc.addPage();
-            afterCodigosY = 20;
-        }
+
+    obs.forEach(l => {
+        doc.text(l, 14, y);
+        y += 5;
     });
 
-    /* === ASSINATURA (rodapé centralizado com verificação de espaço) === */
-    let finalY = afterCodigosY + 12;
-    const pageHeight = doc.internal.pageSize.height;
-    if (finalY > pageHeight - 30) {
-        doc.addPage();
-        finalY = 30;
-    }
+    /* ASSINATURA */
+    y += 12;
+    doc.text("__________________________________________", pageWidth/2, y, { align:"center" });
+    y += 5;
+    doc.setFont("Helvetica","bold");
+    doc.text("Wesley Fernandes de Souza", pageWidth/2, y, { align:"center" });
+    y += 5;
+    doc.setFont("Helvetica","normal");
+    doc.text("Responsável Técnico – CREA-PB: 1605187852", pageWidth/2, y, { align:"center" });
 
-    doc.setFontSize(10);
-    doc.text("__________________________________________", pageWidth/2, finalY, { align: "center" });
-    finalY += 6;
-    doc.setFont("Helvetica", "bold");
-    doc.text("Wesley Fernandes de Souza", pageWidth/2, finalY, { align: "center" });
-    finalY += 5;
-    doc.setFont("Helvetica", "normal");
-    doc.setFontSize(9);
-    doc.text("Responsável Técnico – CREA-PB: 1605187852", pageWidth/2, finalY, { align: "center" });
-
-    /* === SALVAR === */
-    doc.save(`laudo_${e.id || Date.now()}.pdf`);
-}
-
-    /* ============================================================
-   1. Normalizar textos (tirar acentos, espaços extras etc.)
-============================================================ */
-function normalizar(str) {
-    if (!str) return "";
-    return str
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toUpperCase()
-        .trim();
+    doc.save(`laudo_${e.id}.pdf`);
 }
 
 /* ============================================================
-   2. CARREGAR AUTOMATICAMENTE TODAS IMAGENS DO GITHUB
+   INICIAR
 ============================================================ */
-const GITHUB_API =
-  "https://api.github.com/repos/COEC-EPB/listar_ensaios/contents/";
-
-const GITHUB_RAW =
-  "https://raw.githubusercontent.com/COEC-EPB/listar_ensaios/main/";
-
-let mapaImagens = {}; // será preenchido automaticamente
-
-async function carregarImagensGitHub() {
-    try {
-        const r = await fetch(GITHUB_API);
-        const arquivos = await r.json();
-
-        arquivos.forEach(arq => {
-            if (!arq.name.match(/\.(png|jpg|jpeg|jfif)$/i)) return;
-
-            let nome = arq.name.replace(/\.(png|jpg|jpeg|jfif)$/i, "");
-            let nomeNormalizado = normalizar(nome);
-
-            mapaImagens[nomeNormalizado] =
-                GITHUB_RAW + encodeURIComponent(arq.name);
-        });
-
-        console.log("Imagens carregadas:", mapaImagens);
-    } catch (err) {
-        console.error("Erro ao carregar imagens:", err);
-    }
-}
-
-/* ============================================================
-   3. Função para obter imagem por nome do equipamento
-============================================================ */
-function getImagemEquipamento(equipamento) {
-    let chave = normalizar(equipamento);
-    return mapaImagens[chave] || null;
-}
-
-
-/* iniciar */
 (async () => {
-    await carregarImagensGitHub();  // 🔥 primeira coisa: carregar imagens automaticamente
-    carregar();                     // depois, carregar sua tabela
+    await carregarImagensGitHub();  // carrega imagens automáticas
+    carregar();                     // carrega ensaios
 })();
 </script>
+
 
 </body>
 </html>
