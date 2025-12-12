@@ -227,6 +227,9 @@ function fecharModal() {
     modal.style.display = "none";
 }
 
+/* ============================
+   SALVAR APROVAÇÃO
+============================ */
 async function salvarAprovacao() {
     const aprov = document.getElementById("numeroAprovacao").value;
 
@@ -239,6 +242,7 @@ async function salvarAprovacao() {
     fecharModal();
     carregar();
 }
+
 
 /* ============================================================
    6. GERAR PDF COM IMAGEM AUTOMÁTICA
