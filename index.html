@@ -110,6 +110,8 @@
 /* ============================================================
    1. NORMALIZAR TEXTO (sem acentos, UPPERCASE)
 ============================================================ */
+    let proximoNumeroAprovacao = "";
+
 function normalizar(str) {
     if (!str) return "";
     return str
@@ -163,8 +165,29 @@ const API = "https://ensai-dieletrico.pedro-fillype.workers.dev";
 async function carregar() {
     const r = await fetch(`${API}/listar-ensaios`);
     ensaiosOriginais = await r.json();
+
+    // PEGAR O ÚLTIMO NÚMERO DE APROVAÇÃO
+    const anoAtual = new Date().getFullYear();
+
+    // Filtra apenas ensaios aprovados com formato válido: 00001/2025
+    const numeros = ensaiosOriginais
+        .filter(e => e.aprovacao && e.aprovacao.includes("/"))
+        .map(e => Number(e.aprovacao.split("/")[0]));
+
+    let ultimo = 0;
+    if (numeros.length > 0) {
+        ultimo = Math.max(...numeros);
+    }
+
+    // Gera próximo número formatado: 00001/2025
+    const seq = String(ultimo + 1).padStart(5, "0");
+    proximoNumeroAprovacao = `${seq}/${anoAtual}`;
+
+    console.log("Próximo número de aprovação:", proximoNumeroAprovacao);
+
     renderizar(ensaiosOriginais);
 }
+
 
 function renderizar(lista) {
     const tbody = document.querySelector("#tabela tbody");
@@ -226,6 +249,10 @@ let ensaioSelecionado = null;
 
 function abrirModal(id) {
     ensaioSelecionado = id;
+
+    // Preencher automaticamente com o próximo número
+    document.getElementById("numeroAprovacao").value = proximoNumeroAprovacao;
+
     modal.style.display = "flex";
 }
 
