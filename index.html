@@ -341,9 +341,7 @@ async function gerarPDF(e) {
     const imgW = 66;
     const imgH = 66;
 
-    // tentar inserir imagem do equipamento (normalizando chave)
-    const chaveImg = normalizar(e.equipamentos || "");
-    const caminhoImg = mapaNormalizado[chaveImg];
+    const caminhoImg = getImagemEquipamento(e.equipamentos);
 
     if (caminhoImg) {
         // add image (se possível)
@@ -479,8 +477,64 @@ async function gerarPDF(e) {
     doc.save(`laudo_${e.id || Date.now()}.pdf`);
 }
 
+    /* ============================================================
+   1. Normalizar textos (tirar acentos, espaços extras etc.)
+============================================================ */
+function normalizar(str) {
+    if (!str) return "";
+    return str
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toUpperCase()
+        .trim();
+}
+
+/* ============================================================
+   2. CARREGAR AUTOMATICAMENTE TODAS IMAGENS DO GITHUB
+============================================================ */
+const GITHUB_API =
+  "https://api.github.com/repos/COEC-EPB/listar_ensaios/contents/";
+
+const GITHUB_RAW =
+  "https://raw.githubusercontent.com/COEC-EPB/listar_ensaios/main/";
+
+let mapaImagens = {}; // será preenchido automaticamente
+
+async function carregarImagensGitHub() {
+    try {
+        const r = await fetch(GITHUB_API);
+        const arquivos = await r.json();
+
+        arquivos.forEach(arq => {
+            if (!arq.name.match(/\.(png|jpg|jpeg|jfif)$/i)) return;
+
+            let nome = arq.name.replace(/\.(png|jpg|jpeg|jfif)$/i, "");
+            let nomeNormalizado = normalizar(nome);
+
+            mapaImagens[nomeNormalizado] =
+                GITHUB_RAW + encodeURIComponent(arq.name);
+        });
+
+        console.log("Imagens carregadas:", mapaImagens);
+    } catch (err) {
+        console.error("Erro ao carregar imagens:", err);
+    }
+}
+
+/* ============================================================
+   3. Função para obter imagem por nome do equipamento
+============================================================ */
+function getImagemEquipamento(equipamento) {
+    let chave = normalizar(equipamento);
+    return mapaImagens[chave] || null;
+}
+
+
 /* iniciar */
-carregar();
+(async () => {
+    await carregarImagensGitHub();  // 🔥 primeira coisa: carregar imagens automaticamente
+    carregar();                     // depois, carregar sua tabela
+})();
 </script>
 
 </body>
