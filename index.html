@@ -148,6 +148,65 @@
 </div>
 
 <script>
+
+//* ================================
+   BANCO DE IMAGENS POR EQUIPAMENTO
+================================ */
+
+/* Função para normalizar texto */
+function normalizar(str) {
+    return str
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toUpperCase()
+        .trim();
+}
+
+/* ==========================================
+   MAPA COMPLETO DE IMAGENS POR EQUIPAMENTO
+========================================== */
+const imagensEquipamentos = {
+    "ANDAIME ISOLANTE": "listar_ensaios/ANDAIME ISOLANTE.jpg",
+    "ATERRAMENTO MT": "listar_ensaios/ATERRAMENTO MT.jpg",
+    "BANQUETA ISOLADA": "listar_ensaios/BANQUETA ISOLADA.png",
+    "BASTÃO ASPIRAL": "listar_ensaios/BASTÃO ASPIRAL.jpg",
+    "BASTÃO DE BERÇO": "listar_ensaios/BASTÃO DE BERÇO.jpg",
+    "BASTÃO DE TRAÇÃO": "listar_ensaios/BASTÃO DE TRAÇÃO.jpg",
+    "BASTÃO GARRA": "listar_ensaios/BASTÃO GARRA.jpg",
+    "BASTÃO LISO": "listar_ensaios/BASTÃO LISO.jpg",
+    "BASTÃO PEGA TUDO": "listar_ensaios/BASTÃO PEGA TUDO.jpg",
+    "BASTÃO SEPARADOR DE CORDA": "listar_ensaios/BASTÃO SEPARADOR DE CORDA.jpg",
+    "BASTÃO SUPORTE BY PASS": "listar_ensaios/BASTÃO SUPORTE BY PASS.jpg",
+    "BASTÃO TENSOR": "listar_ensaios/BASTÃO TENSOR.jpg",
+    "BASTÃO UNIVERSAL": "listar_ensaios/BASTÃO UNIVERSAL.jpg",
+    "BASTÃO VARA DE MANOBRA": "listar_ensaios/BASTÃO VARA DE MANOBRA.jpg",
+    "BASTÃO VARA TELESCÓPICA": "listar_ensaios/BASTÃO VARA TELESCÓPICA.jpg",
+    "BY PASS DE TP": "listar_ensaios/BY PASS DE TP.jpg",
+    "BY PASS": "listar_ensaios/BY PASS.jpg",
+    "CAPACETE SEGURANÇA": "listar_ensaios/CAPACETE SEGURANÇA.jpg",
+    "COBERTURA CIRCULAR": "listar_ensaios/COBERTURA CIRCULAR.png",
+    "COBERTURA DE COND. FLEXIVEL": "listar_ensaios/COBERTURA DE COND. FLEXIVEL.jpg",
+    "COBERTURA DE COND. RIGIDA": "listar_ensaios/COBERTURA DE COND. RIGIDA.jpg",
+    "DAC - DISPOSITIVO ABERTURA COM CARGA": "listar_ensaios/DAC - DISPOSITIVO ABERTURA COM CARGA.png",
+    "LENÇO ISOLANTE LV": "listar_ensaios/LENÇO ISOLANTE LV.jpg",
+    "LUVA ISOLANTE BT": "listar_ensaios/LUVA ISOLANTE BT.jpg",
+    "LUVA ISOLANTE MT": "listar_ensaios/LUVA ISOLANTE MT.jpg",
+    "LUVA ISOLANTE SED": "listar_ensaios/LUVA ISOLANTE SED.jpg",
+    "MANGA ISOLANTE BT": "listar_ensaios/MANGA ISOLANTE BT.jpg",
+    "MANGA ISOLANTE MT": "listar_ensaios/MANGA ISOLANTE MT.jpg",
+    "MANTA ISOLANTE BT": "listar_ensaios/MANTA ISOLANTE BT.jpg",
+    "SEPARADOR DE ESCADA": "listar_ensaios/SEPARADOR DE ESCADA.jpg",
+    "SKY LANÇA CLASSE A - 138 KW": "listar_ensaios/SKY LANÇA CLASSE A - 138 KW.jfif",
+    "SKY LANÇA CLASSE B - 69 KW": "listar_ensaios/SKY LANÇA CLASSE B - 69 KW.jfif",
+    "SKY LANÇA CLASSE C - 46 KW": "listar_ensaios/SKY LANÇA CLASSE C - 46 KW.jfif",
+    "TALHA": "listar_ensaios/TALHA.jpg",
+    "TESOURÃO PEQUENO": "listar_ensaios/TESOURÃO PEQUENO.jpg"
+};
+
+
+/* ================================
+   CONTROLE PRINCIPAL
+================================ */
 let ensaiosOriginais = [];
 let ensaioSelecionado = null;
 
@@ -231,9 +290,8 @@ async function salvarAprovacao() {
 }
 
 /* ============================
-   SALVAR PDF
+   GERAR PDF
 ============================ */
-    
 async function gerarPDF(e) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -251,14 +309,13 @@ async function gerarPDF(e) {
     const mes = meses[new Date(e.data).getMonth()];
 
 
-    /* === TÍTULO === */
+    /* == TÍTULO == */
     doc.setFontSize(14);
     doc.setFont("Helvetica", "bold");
     doc.text("LAUDO DE ENSAIO DIELÉTRICO", 105, 15, { align: "center" });
 
-    /* ============================================================
-       TABELA CABEÇALHO DO LAUDO
-    ============================================================ */
+
+    /* == CABEÇALHO DO LAUDO == */
     doc.autoTable({
         startY: 22,
         theme: "grid",
@@ -276,9 +333,8 @@ async function gerarPDF(e) {
 
     let finalY = doc.lastAutoTable.finalY + 10;
 
-    /* ============================================================
-       TABELA PRINCIPAL DO LAUDO
-    ============================================================ */
+
+    /* == TABELA PRINCIPAL == */
     doc.autoTable({
         startY: finalY,
         theme: "grid",
@@ -304,9 +360,7 @@ async function gerarPDF(e) {
     finalY = doc.lastAutoTable.finalY + 10;
 
 
-    /* ============================================================
-       TABELA LISTA DE ELEMENTOS (Código → Corrente → Resultado)
-    ============================================================ */
+    /* == LISTA DE ELEMENTOS == */
     let ini = Number(e.cod_inicial);
     let fim = Number(e.cod_final);
 
@@ -337,9 +391,8 @@ async function gerarPDF(e) {
 
     finalY += 10;
 
-    /* ============================================================
-       OBSERVAÇÕES
-    ============================================================ */
+
+    /* == OBSERVAÇÕES == */
     doc.setFont("Helvetica", "bold");
     doc.setFontSize(11);
     doc.text("Observações", 14, finalY);
@@ -370,9 +423,8 @@ async function gerarPDF(e) {
         finalY += 4;
     });
 
-    /* ============================================================
-       ASSINATURA (RODAPÉ)
-    ============================================================ */
+
+    /* == ASSINATURA == */
     const pageHeight = doc.internal.pageSize.height;
 
     if (finalY > pageHeight - 30) {
@@ -392,11 +444,11 @@ async function gerarPDF(e) {
     doc.setFontSize(9);
     doc.text("Responsável Técnico – CREA-PB: 1605187852", 105, finalY, { align: "center" });
 
-    /* ============================================================
-       SALVAR PDF
-    ============================================================ */
+
+    /* == SALVAR == */
     doc.save(`laudo_${e.id}.pdf`);
 }
+
 carregar();
 </script>
 
