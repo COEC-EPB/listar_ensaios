@@ -372,16 +372,19 @@ if (img) {
 
     await addImage(img, imgX, imgY, imgW, imgH);
 
-    // LEGENDA (sempre visível)
-    doc.setFont("Helvetica", "italic");
-    doc.setFontSize(7);
-    doc.text(
-        "*Imagem meramente ilustrativa",
-        imgX + imgW / 2,
-        imgY + imgH + 5,
-        { align: "center" }
-    );
-}
+// LEGENDA
+doc.setFont("Helvetica", "italic");
+doc.setFontSize(7);
+doc.text(
+    "*Imagem meramente ilustrativa",
+    imgX + imgW / 2,
+    imgY + imgH + 5,
+    { align: "center" }
+);
+
+// ⬇️ LINHA ESSENCIAL (RESERVA ESPAÇO)
+y = Math.max(y, imgY + imgH + 10);
+    
     doc.autoTable({
         startY: y,
         tableWidth: 120,
