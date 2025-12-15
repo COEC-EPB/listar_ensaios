@@ -352,23 +352,23 @@ async function gerarPDF(eEncoded) {
        IMAGEM DO EQUIPAMENTO + LEGENDA
     =============================== */
     let img = getImagemEquipamento(e.equipamentos);
-    if (img) {
+if (img) {
 
-        const imgX = 150;
-        const imgY = y;
-        const imgW = 40;
-        const imgH = 40;
+    const imgX = 150;
+    const imgY = y;
+    const imgW = 40;
+    const imgH = 40;
 
-        await addImage(img, imgX, imgY, imgW, imgH);
+    await addImage(img, imgX, imgY, imgW, imgH);
 
-        doc.setFontSize(7);
-        doc.text(
-            "*Imagem meramente ilustrativa",
-            imgX + imgW / 2,
-            imgY + imgH + 4,
-            { align: "center" }
-        );
-    }
+    doc.setFontSize(7);
+    doc.text(
+        "*Imagem meramente ilustrativa",
+        imgX + imgW / 2,
+        imgY + imgH + 4,
+        { align: "center" }
+    );
+}
 
     /* ============================== */
 
@@ -389,21 +389,25 @@ async function gerarPDF(eEncoded) {
     y = doc.lastAutoTable.finalY + 12;
 
     const ini = Number(e.cod_inicial);
-    const fim = Number(e.cod_final);
-    const rows = [];
+const fim = Number(e.cod_final);
+const rows = [];
 
-    for (let i = ini; i <= fim; i++) {
-        rows.push([i, i, `${e.corrente_fuga} µA`, e.resultado.toUpperCase()]);
-    }
+for (let i = ini; i <= fim; i++) {
+    rows.push([
+        i,                           // Código único
+        `${e.corrente_fuga} µA`,     // Corrente de fuga
+        e.resultado.toUpperCase()    // Resultado
+    ]);
+}
 
-    doc.autoTable({
-        startY: y,
-        head: [["Código", "Rastreamento", "Corrente de Fuga", "Resultado"]],
-        styles: { fontSize: 9 },
-        headStyles: { fillColor: [0, 102, 166], textColor: 255 },
-        body: rows,
-        margin: { left: 14, right: 14 }
-    });
+doc.autoTable({
+    startY: y,
+    head: [["Código", "Corrente de Fuga", "Resultado"]],
+    styles: { fontSize: 9 },
+    headStyles: { fillColor: [0, 102, 166], textColor: 255 },
+    body: rows,
+    margin: { left: 14, right: 14 }
+});
 
     y = doc.lastAutoTable.finalY + 10;
 
