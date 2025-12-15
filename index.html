@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Ensaios Dielétricos - Consulta (Laudo)</title>
+<title>Ensaios Dielétricos - Consulta (Modelo)</title>
 
 <!-- jsPDF + AutoTable -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -349,44 +349,29 @@ async function gerarPDF(eEncoded) {
     y = doc.lastAutoTable.finalY + 10;
 
     /* ==============================
-   IMAGEM DO EQUIPAMENTO + LEGENDA
-============================== */
+       IMAGEM DO EQUIPAMENTO + LEGENDA
+    =============================== */
+    let img = getImagemEquipamento(e.equipamentos);
+    if (img) {
 
-let img = getImagemEquipamento(e.equipamentos);
+        const imgX = 150;
+        const imgY = y;
+        const imgW = 40;
+        const imgH = 40;
 
-if (img) {
+        await addImage(img, imgX, imgY, imgW, imgH);
 
-    const imgX = 155;
-    const imgW = 40;
-    const imgH = 40;
-
-    // Garante Y válido na página
-    let imgY = y;
-
-    // Se faltar espaço na página, quebra
-    if (imgY + imgH + 10 > doc.internal.pageSize.height) {
-        doc.addPage();
-        imgY = 20;
-        y = 20;
+        doc.setFontSize(7);
+        doc.text(
+            "*Imagem meramente ilustrativa",
+            imgX + imgW / 2,
+            imgY + imgH + 4,
+            { align: "center" }
+        );
     }
 
-    await addImage(img, imgX, imgY, imgW, imgH);
+    /* ============================== */
 
-// LEGENDA
-doc.setFont("Helvetica", "italic");
-doc.setFontSize(7);
-doc.text(
-    "*Imagem meramente ilustrativa",
-    imgX + imgW / 2,
-    imgY + imgH + 5,
-    { align: "center" }
-);
-
-// ⬇️ LINHA ESSENCIAL (RESERVA ESPAÇO)
-y = Math.max(y, imgY + imgH + 10);
-
-} // ✅ FECHA O if (img)
-    
     doc.autoTable({
         startY: y,
         tableWidth: 120,
@@ -404,25 +389,21 @@ y = Math.max(y, imgY + imgH + 10);
     y = doc.lastAutoTable.finalY + 12;
 
     const ini = Number(e.cod_inicial);
-const fim = Number(e.cod_final);
-const rows = [];
+    const fim = Number(e.cod_final);
+    const rows = [];
 
-for (let i = ini; i <= fim; i++) {
-    rows.push([
-        i,                           // Código único
-        `${e.corrente_fuga} µA`,     // Corrente de fuga
-        e.resultado.toUpperCase()    // Resultado
-    ]);
-}
+    for (let i = ini; i <= fim; i++) {
+        rows.push([i, i, `${e.corrente_fuga} µA`, e.resultado.toUpperCase()]);
+    }
 
-doc.autoTable({
-    startY: y,
-    head: [["Código Rastreamento", "Corrente de Fuga", "Resultado"]],
-    styles: { fontSize: 9 },
-    headStyles: { fillColor: [0, 102, 166], textColor: 255 },
-    body: rows,
-    margin: { left: 14, right: 14 }
-});
+    doc.autoTable({
+        startY: y,
+        head: [["Código", "Rastreamento", "Corrente de Fuga", "Resultado"]],
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [0, 102, 166], textColor: 255 },
+        body: rows,
+        margin: { left: 14, right: 14 }
+    });
 
     y = doc.lastAutoTable.finalY + 10;
 
