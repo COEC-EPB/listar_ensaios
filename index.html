@@ -279,21 +279,17 @@ async function salvarAprovacao() {
 }
 
 /* ============================================================
-   6. GERAR PDF (VERSÃO FINAL)
+   6. GERAR PDF (COM QUEBRA DE PÁGINA)
 ============================================================ */
 async function gerarPDF(eEncoded) {
 
     const e = JSON.parse(decodeURIComponent(eEncoded));
 
-    // 🔒 Bloqueio sem certificado
     if (!e.aprovacao) {
         alert("Este ensaio não possui número de certificação. O laudo não pode ser gerado.");
         return;
     }
 
-    /* ==============================
-       DADOS INICIAIS
-    =============================== */
     const meses = [
         "01 - JANEIRO","02 - FEVEREIRO","03 - MARÇO","04 - ABRIL",
         "05 - MAIO","06 - JUNHO","07 - JULHO","08 - AGOSTO",
@@ -303,10 +299,12 @@ async function gerarPDF(eEncoded) {
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: "mm", format: "a4" });
-    const pageWidth = doc.internal.pageSize.getWidth();
+
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const pageWidth  = doc.internal.pageSize.getWidth();
 
     /* ==============================
-       FUNÇÃO AUXILIAR IMAGEM
+       FUNÇÃO IMAGEM
     =============================== */
     async function addImage(path, x, y, w, h) {
         const res = await fetch(path);
@@ -348,7 +346,6 @@ async function gerarPDF(eEncoded) {
         tableWidth: 120,
         margin: { left: 14 },
         head: [["Laudo", "Valor"]],
-        headStyles: { fillColor: [0, 102, 166], textColor: 255 },
         styles: { fontSize: 9 },
         body: [
             ["Laudo", "EPB/EBO"],
@@ -363,17 +360,15 @@ async function gerarPDF(eEncoded) {
     y = doc.lastAutoTable.finalY + 8;
 
     /* ==============================
-       TABELA + IMAGEM ALINHADAS
+       TABELA + IMAGEM
     =============================== */
     const blocoY = y;
 
-    // 🔹 TABELA (ESQUERDA)
     doc.autoTable({
         startY: blocoY,
         tableWidth: 120,
         margin: { left: 14 },
         head: [["Campo", "Valor"]],
-        headStyles: { fillColor: [255, 165, 0], textColor: 0 },
         styles: { fontSize: 9 },
         body: [
             ["Equipamento", e.equipamentos],
@@ -384,7 +379,6 @@ async function gerarPDF(eEncoded) {
 
     const tabelaFimY = doc.lastAutoTable.finalY;
 
-    // 🔹 IMAGEM (DIREITA)
     let imgFimY = blocoY;
     const imagemEquip = getImagemEquipamento(e.equipamentos);
 
@@ -395,7 +389,6 @@ async function gerarPDF(eEncoded) {
 
         await addImage(imagemEquip, imgX, blocoY, imgW, imgH);
 
-        // Legenda
         doc.setFont("Helvetica", "italic");
         doc.setFontSize(7);
         doc.text(
@@ -408,17 +401,13 @@ async function gerarPDF(eEncoded) {
         imgFimY = blocoY + imgH + 10;
     }
 
-    // 🔹 Próximo Y correto
     y = Math.max(tabelaFimY, imgFimY) + 6;
 
     /* ==============================
-       TABELA DE RESULTADOS
+       RESULTADOS
     =============================== */
-    const ini = Number(e.cod_inicial);
-    const fim = Number(e.cod_final);
     const rows = [];
-
-    for (let i = ini; i <= fim; i++) {
+    for (let i = Number(e.cod_inicial); i <= Number(e.cod_final); i++) {
         rows.push([
             i,
             `${e.corrente_fuga} µA`,
@@ -429,7 +418,6 @@ async function gerarPDF(eEncoded) {
     doc.autoTable({
         startY: y,
         head: [["Código Rastreamento", "Corrente de Fuga", "Resultado"]],
-        headStyles: { fillColor: [0, 102, 166], textColor: 255 },
         styles: { fontSize: 9 },
         body: rows,
         margin: { left: 14, right: 14 }
@@ -441,43 +429,48 @@ async function gerarPDF(eEncoded) {
        OBSERVAÇÕES
     =============================== */
     doc.setFont("Helvetica", "bold");
-    doc.setFontSize(10);
     doc.text("Observações", 14, y);
     y += 6;
 
     doc.setFont("Helvetica", "normal");
     doc.setFontSize(8.5);
 
-    [
+    const obs = [
         "• Os EPI’s e EPC’s com código de rastreio correspondente ao laudo estão aprovados para uso.",
         "• Ensaio de Tensão Aplicada: Verifica a capacidade dielétrica sem rompimento.",
         "• ART do Ensaio Dielétrico: -",
         "• Equipamento Utilizado: Testador EEAT – AT120050CADMT2SAURS232.",
         "• Ambiente: Temperatura 30°C | Umidade 50% | Pressão 970 mbar",
         "• Incertezas: Tensão ±0,05% | Corrente ±0,01%"
-    ].forEach(l => {
+    ];
+
+    obs.forEach(l => {
+        if (y > pageHeight - 30) {
+            doc.addPage();
+            y = 20;
+        }
         doc.text(l, 14, y);
         y += 5;
     });
 
-    y += 10;
-
     /* ==============================
-       ASSINATURA
+       ASSINATURA (SEMPRE VISÍVEL)
     =============================== */
+    if (y > pageHeight - 40) {
+        doc.addPage();
+        y = 30;
+    }
+
     doc.text("__________________________________________", pageWidth / 2, y, { align: "center" });
-    y += 5;
+    y += 6;
 
     doc.setFont("Helvetica", "bold");
     doc.text("Wesley Fernandes de Souza", pageWidth / 2, y, { align: "center" });
-    y += 5;
+    y += 6;
 
     doc.setFont("Helvetica", "normal");
     doc.text("Responsável Técnico – CREA-PB: 1605187852", pageWidth / 2, y, { align: "center" });
 
-    /* ==============================
-       SALVAR
-    =============================== */
     doc.save(`laudo_${e.id}.pdf`);
 }
 (async () => {
