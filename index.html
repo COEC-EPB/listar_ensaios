@@ -389,7 +389,7 @@ async function gerarPDF(eEncoded) {
    TABELA + IMAGEM ALINHADAS
 ============================== */
 
-const blocoY = y; // 🔹 MESMO Y PARA TUDO
+const blocoY = y; // mesmo Y para tabela e imagem
 
 // TABELA (ESQUERDA)
 doc.autoTable({
@@ -405,19 +405,19 @@ doc.autoTable({
     ]
 });
 
-// ALTURA FINAL DA TABELA
+// FIM DA TABELA
 const tabelaFimY = doc.lastAutoTable.finalY;
 
 // IMAGEM (DIREITA)
-const img = getImagemEquipamento(e.equipamentos);
 let imgFimY = blocoY;
+const imagemEquip = getImagemEquipamento(e.equipamentos);
 
-if (img) {
+if (imagemEquip) {
     const imgX = 145;
     const imgW = 45;
     const imgH = 45;
 
-    await addImage(img, imgX, blocoY, imgW, imgH);
+    await addImage(imagemEquip, imgX, blocoY, imgW, imgH);
 
     // LEGENDA
     doc.setFont("Helvetica", "italic");
@@ -432,7 +432,7 @@ if (img) {
     imgFimY = blocoY + imgH + 10;
 }
 
-// 🔹 DEFINE O PRÓXIMO Y CORRETAMENTE
+// PRÓXIMO Y CORRETO
 y = Math.max(tabelaFimY, imgFimY) + 5;
 /* ============================================================
    INICIAR
