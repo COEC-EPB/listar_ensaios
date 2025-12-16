@@ -242,7 +242,7 @@ async function salvarAprovacao() {
     carregar();
 }
 /* ============================================================
-   6. GERAR PDF
+   6. GERAR PDF (CORRIGIDO DEFINITIVO)
 ============================================================ */
 async function gerarPDF(eEncoded) {
 
@@ -264,28 +264,24 @@ async function gerarPDF(eEncoded) {
     const doc = new jsPDF({ unit: "mm", format: "a4" });
 
     async function addImage(path, x, y, w, h) {
-        try {
-            const res = await fetch(path);
-            const blob = await res.blob();
+        const res = await fetch(path);
+        const blob = await res.blob();
 
-            return new Promise(resolve => {
-                const reader = new FileReader();
-                reader.onload = () => {
-                    const base64 = reader.result;
-                    const ext = path.split(".").pop().toUpperCase();
-                    doc.addImage(base64, ext === "PNG" ? "PNG" : "JPEG", x, y, w, h);
-                    resolve(true);
-                };
-                reader.readAsDataURL(blob);
-            });
-        } catch {
-            return false;
-        }
+        return new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                doc.addImage(reader.result, "JPEG", x, y, w, h);
+                resolve();
+            };
+            reader.readAsDataURL(blob);
+        });
     }
 
     const pageWidth = doc.internal.pageSize.getWidth();
 
-    await addImage(mapaImagens["ENERGISA"], 14, 8, 30, 18);
+    if (mapaImagens["ENERGISA"]) {
+        await addImage(mapaImagens["ENERGISA"], 14, 8, 30, 18);
+    }
 
     doc.setFontSize(16).setFont("Helvetica", "bold");
     doc.text("LAUDO DE ENSAIO DIELÉTRICO", pageWidth / 2, 16, { align: "center" });
@@ -294,11 +290,9 @@ async function gerarPDF(eEncoded) {
 
     doc.autoTable({
         startY: y,
-        tableWidth: 150,
+        tableWidth: 120,
         margin: { left: 14 },
         head: [["Laudo", "Valor"]],
-        headStyles: { fillColor: [0, 102, 166], textColor: 255 },
-        styles: { fontSize: 9 },
         body: [
             ["Laudo", "EPB/EBO"],
             ["Certificado nº", e.aprovacao],
@@ -309,39 +303,42 @@ async function gerarPDF(eEncoded) {
         ]
     });
 
-    y = doc.lastAutoTable.finalY + 10;
-
     /* ==============================
-       IMAGEM DO EQUIPAMENTO + LEGENDA
+       IMAGEM + LEGENDA (BLOCO FIXO)
     =============================== */
-    let img = getImagemEquipamento(e.equipamentos);
-    if (img) {
+    const img = getImagemEquipamento(e.equipamentos);
+    const imgX = 145;
+    const imgW = 45;
+    const imgH = 45;
 
-        const imgX = 150;
-        const imgY = y;
-        const imgW = 40;
-        const imgH = 40;
+    let imgY = y;
+
+    if (img) {
+        imgY = doc.lastAutoTable.finalY + 5;
 
         await addImage(img, imgX, imgY, imgW, imgH);
 
+        doc.setFont("Helvetica", "italic");
         doc.setFontSize(7);
         doc.text(
             "*Imagem meramente ilustrativa",
             imgX + imgW / 2,
-            imgY + imgH + 4,
+            imgY + imgH + 5,
             { align: "center" }
         );
     }
 
-    /* ============================== */
+    /* 👉 RESERVA DE ESPAÇO (ESSENCIAL) */
+    y = Math.max(doc.lastAutoTable.finalY, imgY + imgH + 10) + 5;
 
+    /* ==============================
+       DADOS DO ENSAIO
+    =============================== */
     doc.autoTable({
         startY: y,
         tableWidth: 120,
         margin: { left: 14 },
         head: [["Campo", "Valor"]],
-        headStyles: { fillColor: [255, 165, 0], textColor: 0 },
-        styles: { fontSize: 9 },
         body: [
             ["Equipamento", e.equipamentos],
             ["Tipo de Ensaio", e.tipo_ensaio],
@@ -349,23 +346,20 @@ async function gerarPDF(eEncoded) {
         ]
     });
 
-    y = doc.lastAutoTable.finalY + 12;
+    y = doc.lastAutoTable.finalY + 10;
 
-    const ini = Number(e.cod_inicial);
-    const fim = Number(e.cod_final);
-    const rows = [];
-
-    for (let i = ini; i <= fim; i++) {
-        rows.push([i, i, `${e.corrente_fuga} µA`, e.resultado.toUpperCase()]);
-    }
-
+    /* ==============================
+       TABELA (1 CÓDIGO DE RASTREAMENTO)
+    =============================== */
     doc.autoTable({
         startY: y,
-        head: [["Código", "Rastreamento", "Corrente de Fuga", "Resultado"]],
-        styles: { fontSize: 9 },
-        headStyles: { fillColor: [0, 102, 166], textColor: 255 },
-        body: rows,
-        margin: { left: 14, right: 14 }
+        head: [["Código de Rastreamento", "Corrente de Fuga", "Resultado"]],
+        body: [[
+            e.cod_inicial,
+            `${e.corrente_fuga} µA`,
+            e.resultado.toUpperCase()
+        ]],
+        styles: { fontSize: 9 }
     });
 
     y = doc.lastAutoTable.finalY + 10;
@@ -375,41 +369,25 @@ async function gerarPDF(eEncoded) {
     y += 6;
 
     doc.setFont("Helvetica", "normal").setFontSize(8.5);
-
     [
         "• Os EPI’s e EPC’s com código de rastreio correspondente ao laudo estão aprovados para uso.",
         "• Ensaio de Tensão Aplicada: Verifica a capacidade dielétrica sem rompimento.",
         "• ART do Ensaio Dielétrico: -",
-        "• Equipamento Utilizado: Testador EEAT – AT120050CADMT2SAURS232.",
-        "• Ambiente: Temperatura 30°C | Umidade 50% | Pressão 970 mbar",
-        "• Incertezas: Tensão ±0,05% | Corrente ±0,01%"
+        "• Equipamento Utilizado: Testador EEAT – AT120050CADMT2SAURS232."
     ].forEach(l => {
         doc.text(l, 14, y);
         y += 5;
     });
 
-    y += 12;
-
+    y += 10;
     doc.text("__________________________________________", pageWidth / 2, y, { align: "center" });
     y += 5;
 
     doc.setFont("Helvetica", "bold");
     doc.text("Wesley Fernandes de Souza", pageWidth / 2, y, { align: "center" });
-    y += 5;
-
-    doc.setFont("Helvetica", "normal");
-    doc.text("Responsável Técnico – CREA-PB: 1605187852", pageWidth / 2, y, { align: "center" });
 
     doc.save(`laudo_${e.id}.pdf`);
 }
-
-/* ============================================================
-   INICIAR
-============================================================ */
-(async () => {
-    await carregarImagensGitHub();
-    carregar();
-})();
 </script>
 
 
