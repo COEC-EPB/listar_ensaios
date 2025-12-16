@@ -386,46 +386,54 @@ async function gerarPDF(eEncoded) {
     y = doc.lastAutoTable.finalY + 10;
 
     /* ==============================
-       TABELA (1 CÓDIGO DE RASTREAMENTO)
-    =============================== */
-    doc.autoTable({
-        startY: y,
-        head: [["Código de Rastreamento", "Corrente de Fuga", "Resultado"]],
-        body: [[
-            e.cod_inicial,
-            `${e.corrente_fuga} µA`,
-            e.resultado.toUpperCase()
-        ]],
-        styles: { fontSize: 9 }
-    });
+   TABELA + IMAGEM ALINHADAS
+============================== */
 
-    y = doc.lastAutoTable.finalY + 10;
+const blocoY = y; // 🔹 MESMO Y PARA TUDO
 
-    doc.setFont("Helvetica", "bold").setFontSize(10);
-    doc.text("Observações", 14, y);
-    y += 6;
+// TABELA (ESQUERDA)
+doc.autoTable({
+    startY: blocoY,
+    tableWidth: 120,
+    margin: { left: 14 },
+    head: [["Campo", "Valor"]],
+    styles: { fontSize: 9 },
+    body: [
+        ["Equipamento", e.equipamentos],
+        ["Tipo de Ensaio", e.tipo_ensaio],
+        ["Norma Aplicada", e.norma]
+    ]
+});
 
-    doc.setFont("Helvetica", "normal").setFontSize(8.5);
-    [
-        "• Os EPI’s e EPC’s com código de rastreio correspondente ao laudo estão aprovados para uso.",
-        "• Ensaio de Tensão Aplicada: Verifica a capacidade dielétrica sem rompimento.",
-        "• ART do Ensaio Dielétrico: -",
-        "• Equipamento Utilizado: Testador EEAT – AT120050CADMT2SAURS232."
-    ].forEach(l => {
-        doc.text(l, 14, y);
-        y += 5;
-    });
+// ALTURA FINAL DA TABELA
+const tabelaFimY = doc.lastAutoTable.finalY;
 
-    y += 10;
-    doc.text("__________________________________________", pageWidth / 2, y, { align: "center" });
-    y += 5;
+// IMAGEM (DIREITA)
+const img = getImagemEquipamento(e.equipamentos);
+let imgFimY = blocoY;
 
-    doc.setFont("Helvetica", "bold");
-    doc.text("Wesley Fernandes de Souza", pageWidth / 2, y, { align: "center" });
+if (img) {
+    const imgX = 145;
+    const imgW = 45;
+    const imgH = 45;
 
-    doc.save(`laudo_${e.id}.pdf`);
+    await addImage(img, imgX, blocoY, imgW, imgH);
+
+    // LEGENDA
+    doc.setFont("Helvetica", "italic");
+    doc.setFontSize(7);
+    doc.text(
+        "*Imagem meramente ilustrativa",
+        imgX + imgW / 2,
+        blocoY + imgH + 5,
+        { align: "center" }
+    );
+
+    imgFimY = blocoY + imgH + 10;
 }
 
+// 🔹 DEFINE O PRÓXIMO Y CORRETAMENTE
+y = Math.max(tabelaFimY, imgFimY) + 5;
 /* ============================================================
    INICIAR
 ============================================================ */
