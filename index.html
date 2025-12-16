@@ -108,23 +108,28 @@
 
 <script>
 /* ============================================================
-   1. NORMALIZAR TEXTO
+   1. NORMALIZAR TEXTO (sem acentos, UPPERCASE)
 ============================================================ */
-let proximoNumeroAprovacao = "";
+    let proximoNumeroAprovacao = "";
 
 function normalizar(str) {
     if (!str) return "";
-    return str.normalize("NFD")
+    return str
+        .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
         .toUpperCase()
         .trim();
 }
 
 /* ============================================================
-   2. IMAGENS DO GITHUB
+   2. CARREGAR IMAGENS DO GITHUB
 ============================================================ */
-const GITHUB_API = "https://api.github.com/repos/COEC-EPB/listar_ensaios/contents/";
-const GITHUB_RAW = "https://raw.githubusercontent.com/COEC-EPB/listar_ensaios/main/";
+const GITHUB_API =
+    "https://api.github.com/repos/COEC-EPB/listar_ensaios/contents/";
+
+const GITHUB_RAW =
+    "https://raw.githubusercontent.com/COEC-EPB/listar_ensaios/main/";
+
 let mapaImagens = {};
 
 async function carregarImagensGitHub() {
@@ -134,16 +139,21 @@ async function carregarImagensGitHub() {
 
         arquivos.forEach(arq => {
             if (!arq.name.match(/\.(png|jpg|jpeg|jfif|tif)$/i)) return;
-            const nome = arq.name.replace(/\.(png|jpg|jpeg|jfif|tif)$/i, "");
-            mapaImagens[normalizar(nome)] = GITHUB_RAW + encodeURIComponent(arq.name);
+
+            let nomeOriginal = arq.name.replace(/\.(png|jpg|jpeg|jfif|tif)$/i, "");
+            let chave = normalizar(nomeOriginal);
+
+            mapaImagens[chave] = GITHUB_RAW + encodeURIComponent(arq.name);
         });
-    } catch (e) {
-        console.error("Erro ao carregar imagens", e);
+
+        console.log("Imagens carregadas:", mapaImagens);
+    } catch (err) {
+        console.error("Erro ao carregar imagens:", err);
     }
 }
 
-function getImagemEquipamento(nome) {
-    return mapaImagens[normalizar(nome)] || null;
+function getImagemEquipamento(equipamento) {
+    return mapaImagens[normalizar(equipamento)] || null;
 }
 
 /* ============================================================
@@ -156,39 +166,52 @@ async function carregar() {
     const r = await fetch(`${API}/listar-ensaios`);
     ensaiosOriginais = await r.json();
 
-    const ano = new Date().getFullYear();
+    // PEGAR O ÚLTIMO NÚMERO DE APROVAÇÃO
+    const anoAtual = new Date().getFullYear();
+
+    // Filtra apenas ensaios aprovados com formato válido: 00001/2025
     const numeros = ensaiosOriginais
         .filter(e => e.aprovacao && e.aprovacao.includes("/"))
         .map(e => Number(e.aprovacao.split("/")[0]));
 
-    const ultimo = numeros.length ? Math.max(...numeros) : 0;
-    proximoNumeroAprovacao = `${String(ultimo + 1).padStart(5, "0")}/${ano}`;
+    let ultimo = 0;
+    if (numeros.length > 0) {
+        ultimo = Math.max(...numeros);
+    }
+
+    // Gera próximo número formatado: 00001/2025
+    const seq = String(ultimo + 1).padStart(5, "0");
+    proximoNumeroAprovacao = `${seq}/${anoAtual}`;
+
+    console.log("Próximo número de aprovação:", proximoNumeroAprovacao);
 
     renderizar(ensaiosOriginais);
 }
+
 
 function renderizar(lista) {
     const tbody = document.querySelector("#tabela tbody");
     tbody.innerHTML = "";
 
     lista.forEach(e => {
-        const btnPdf = e.aprovacao
-            ? `<button class="btn btn-primary" onclick='gerarPDF("${encodeURIComponent(JSON.stringify(e))}")'>Gerar PDF</button>`
-            : `<button class="btn btn-primary" onclick='alert("Laudo sem número de certificado.")'>Gerar PDF</button>`;
 
-        const btnAprov = e.aprovacao
-            ? `<button class="btn" disabled>Aprovado</button>`
-            : `<button class="btn" style="background:#f36f21;color:#fff" onclick="abrirModal(${e.id})">Aprovar</button>`;
+        const btnPdf = e.aprovacao
+            ? `<button class='btn btn-primary' onclick='gerarPDF("${encodeURIComponent(JSON.stringify(e))}")'>Gerar PDF</button>`
+            : `<button class='btn btn-primary' onclick='alert("Este ensaio não possui número de certificação. O laudo não pode ser gerado.")'>Gerar PDF</button>`;
+
+        const btnAprovar = e.aprovacao
+            ? `<button class="btn" disabled style="background:#ccc;color:#333;">Aprovado</button>`
+            : `<button class="btn" style="background:#f36f21;color:#fff;" onclick="abrirModal(${e.id})">Aprovar</button>`;
 
         tbody.innerHTML += `
-        <tr>
-            <td>${e.id}</td>
-            <td>${e.nome}</td>
-            <td>${e.equipamentos}</td>
-            <td>${e.resultado}</td>
-            <td>${e.aprovacao ?? "-"}</td>
-            <td style="display:flex;gap:6px;">${btnPdf}${btnAprov}</td>
-        </tr>`;
+            <tr>
+                <td>${e.id}</td>
+                <td>${e.nome}</td>
+                <td>${e.equipamentos}</td>
+                <td>${e.resultado}</td>
+                <td>${e.aprovacao ?? "-"}</td>
+                <td style="display:flex;gap:6px;">${btnPdf} ${btnAprovar}</td>
+            </tr>`;
     });
 }
 
@@ -196,19 +219,24 @@ function renderizar(lista) {
    4. FILTROS
 ============================================================ */
 function aplicarFiltros() {
-    const nome = filtroNome.value.toLowerCase();
-    const eqp = filtroEquipamento.value.toLowerCase();
-    const aprov = filtroAprovacao.value;
-    const geral = buscaGeral.value.toLowerCase();
+    let nome = filtroNome.value.toLowerCase();
+    let eqp = filtroEquipamento.value.toLowerCase();
+    let aprov = filtroAprovacao.value;
+    let geral = buscaGeral.value.toLowerCase();
 
-    renderizar(ensaiosOriginais.filter(e =>
-        e.nome.toLowerCase().includes(nome) &&
-        e.equipamentos.toLowerCase().includes(eqp) &&
-        (aprov === "" ||
-            (aprov === "-" && !e.aprovacao) ||
-            (aprov === "ap" && e.aprovacao)) &&
-        (geral === "" || JSON.stringify(e).toLowerCase().includes(geral))
-    ));
+    let filtrados = ensaiosOriginais.filter(e => {
+        return (
+            e.nome.toLowerCase().includes(nome) &&
+            e.equipamentos.toLowerCase().includes(eqp) &&
+            (aprov === "" ||
+                (aprov === "-" && !e.aprovacao) ||
+                (aprov === "ap" && e.aprovacao)) &&
+            (geral === "" ||
+                JSON.stringify(e).toLowerCase().includes(geral))
+        );
+    });
+
+    renderizar(filtrados);
 }
 
 document.querySelectorAll("#filtroNome,#filtroEquipamento,#filtroAprovacao,#buscaGeral")
@@ -221,7 +249,10 @@ let ensaioSelecionado = null;
 
 function abrirModal(id) {
     ensaioSelecionado = id;
-    numeroAprovacao.value = proximoNumeroAprovacao;
+
+    // Preencher automaticamente com o próximo número
+    document.getElementById("numeroAprovacao").value = proximoNumeroAprovacao;
+
     modal.style.display = "flex";
 }
 
@@ -230,17 +261,23 @@ function fecharModal() {
 }
 
 async function salvarAprovacao() {
+    const aprov = numeroAprovacao.value.trim();
+
+    if (!aprov) {
+        alert("Digite o número de aprovação.");
+        return;
+    }
+
     await fetch(`${API}/salvar-aprovacao`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            id: ensaioSelecionado,
-            aprovacao: numeroAprovacao.value.trim()
-        })
+        body: JSON.stringify({ id: ensaioSelecionado, aprovacao: aprov })
     });
+
     fecharModal();
     carregar();
 }
+
 /* ============================================================
    6. GERAR PDF (CORRIGIDO DEFINITIVO)
 ============================================================ */
@@ -388,6 +425,14 @@ async function gerarPDF(eEncoded) {
 
     doc.save(`laudo_${e.id}.pdf`);
 }
+
+/* ============================================================
+   INICIAR
+============================================================ */
+(async () => {
+    await carregarImagensGitHub();
+    carregar();
+})();
 </script>
 
 
