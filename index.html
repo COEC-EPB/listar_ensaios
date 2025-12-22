@@ -279,7 +279,7 @@ async function salvarAprovacao() {
 }
 
 /* ============================================================
-   6. GERAR PDF (COM QUEBRA DE PÁGINA)
+   6. GERAR PDF (LAYOUT FINAL CORRIGIDO)
 ============================================================ */
 async function gerarPDF(eEncoded) {
 
@@ -304,7 +304,7 @@ async function gerarPDF(eEncoded) {
     const pageWidth  = doc.internal.pageSize.getWidth();
 
     /* ==============================
-       FUNÇÃO IMAGEM
+       FUNÇÃO AUXILIAR – IMAGEM
     =============================== */
     async function addImage(path, x, y, w, h) {
         const res = await fetch(path);
@@ -338,76 +338,32 @@ async function gerarPDF(eEncoded) {
 
     let y = 30;
 
-   /* ==============================
-   DADOS DO LAUDO + IMAGEM AO LADO
-============================== */
-const inicioBlocoY = y;
+    /* ==============================
+       LAUDO + IMAGEM AO LADO
+    =============================== */
+    const inicioBlocoY = y;
 
-// --- TABELA LAUDO (ESQUERDA)
-doc.autoTable({
-    startY: inicioBlocoY,
-    tableWidth: 120,
-    margin: { left: 14 },
-    head: [["Laudo", "Valor"]],
-    styles: { fontSize: 9 },
-    body: [
-        ["Laudo", "EPB/EBO"],
-        ["Certificado nº", e.aprovacao],
-        ["Mês do Ensaio", e.mes],
-        ["Regional", e.regional],
-        ["Localidade", e.localidade],
-        ["Departamento", e.departamento]
-    ]
-});
+    // TABELA LAUDO (ESQUERDA)
+    doc.autoTable({
+        startY: inicioBlocoY,
+        tableWidth: 120,
+        margin: { left: 14 },
+        head: [["Laudo", "Valor"]],
+        styles: { fontSize: 9 },
+        body: [
+            ["Laudo", "EPB/EBO"],
+            ["Certificado nº", e.aprovacao],
+            ["Mês do Ensaio", e.mes],
+            ["Regional", e.regional],
+            ["Localidade", e.localidade],
+            ["Departamento", e.departamento]
+        ]
+    });
 
-// FINAL DA TABELA
-const laudoFimY = doc.lastAutoTable.finalY;
+    const laudoFimY = doc.lastAutoTable.finalY;
 
-// --- IMAGEM (DIREITA, ALINHADA COM LAUDO)
-let imgFimY = inicioBlocoY;
-const imagemEquip = getImagemEquipamento(e.equipamentos);
-
-if (imagemEquip) {
-    const imgX = 145;
-    const imgW = 45;
-    const imgH = 45;
-
-    await addImage(imagemEquip, imgX, inicioBlocoY, imgW, imgH);
-
-    doc.setFont("Helvetica", "italic");
-    doc.setFontSize(7);
-    doc.text(
-        "*Imagem meramente ilustrativa",
-        imgX + imgW / 2,
-        inicioBlocoY + imgH + 5,
-        { align: "center" }
-    );
-
-    imgFimY = inicioBlocoY + imgH + 10;
-}
-
-// DEFINE Y PARA PRÓXIMO BLOCO (SEM BURACO)
-y = Math.max(laudoFimY, imgFimY) + 6;
-
-/* ==============================
-   DADOS DO ENSAIO (SOBE AUTOMATICO)
-============================== */
-doc.autoTable({
-    startY: y,
-    tableWidth: 120,
-    margin: { left: 14 },
-    head: [["Campo", "Valor"]],
-    styles: { fontSize: 9 },
-    body: [
-        ["Equipamento", e.equipamentos],
-        ["Tipo de Ensaio", e.tipo_ensaio],
-        ["Norma Aplicada", e.norma]
-    ]
-});
-
-y = doc.lastAutoTable.finalY + 8;
-
-    let imgFimY = blocoY;
+    // IMAGEM (DIREITA)
+    let imgFimY = inicioBlocoY;
     const imagemEquip = getImagemEquipamento(e.equipamentos);
 
     if (imagemEquip) {
@@ -415,21 +371,40 @@ y = doc.lastAutoTable.finalY + 8;
         const imgW = 45;
         const imgH = 45;
 
-        await addImage(imagemEquip, imgX, blocoY, imgW, imgH);
+        await addImage(imagemEquip, imgX, inicioBlocoY, imgW, imgH);
 
         doc.setFont("Helvetica", "italic");
         doc.setFontSize(7);
         doc.text(
             "*Imagem meramente ilustrativa",
             imgX + imgW / 2,
-            blocoY + imgH + 5,
+            inicioBlocoY + imgH + 5,
             { align: "center" }
         );
 
-        imgFimY = blocoY + imgH + 10;
+        imgFimY = inicioBlocoY + imgH + 10;
     }
 
-    y = Math.max(tabelaFimY, imgFimY) + 6;
+    // PRÓXIMO BLOCO
+    y = Math.max(laudoFimY, imgFimY) + 6;
+
+    /* ==============================
+       DADOS DO ENSAIO
+    =============================== */
+    doc.autoTable({
+        startY: y,
+        tableWidth: 120,
+        margin: { left: 14 },
+        head: [["Campo", "Valor"]],
+        styles: { fontSize: 9 },
+        body: [
+            ["Equipamento", e.equipamentos],
+            ["Tipo de Ensaio", e.tipo_ensaio],
+            ["Norma Aplicada", e.norma]
+        ]
+    });
+
+    y = doc.lastAutoTable.finalY + 8;
 
     /* ==============================
        RESULTADOS
@@ -482,7 +457,7 @@ y = doc.lastAutoTable.finalY + 8;
     });
 
     /* ==============================
-       ASSINATURA (SEMPRE VISÍVEL)
+       ASSINATURA
     =============================== */
     if (y > pageHeight - 40) {
         doc.addPage();
