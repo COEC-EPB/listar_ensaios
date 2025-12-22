@@ -439,12 +439,14 @@ async function gerarPDF(eEncoded) {
     doc.setFontSize(8.5);
 
     const obs = [
-        "• Os EPI’s e EPC’s com código de rastreio correspondente ao laudo estão aprovados para uso.",
-        "• Ensaio de Tensão Aplicada: Verifica a capacidade dielétrica sem rompimento.",
-        "• ART do Ensaio Dielétrico: -",
-        "• Equipamento Utilizado: Testador EEAT – AT120050CADMT2SAURS232.",
-        "• Ambiente: Temperatura 30°C | Umidade 50% | Pressão 970 mbar",
-        "• Incertezas: Tensão ±0,05% | Corrente ±0,01%"
+        "• Os EPI’s e EPC’s que estiverem com o codigo de rastreio e o ano de ensaio referente ao laudo tecnico, estão aprovadas para ser utilizado em campo.",
+        "* Imagem meramente ilustrativa",
+        "• Ensaio de tensão aplicada: Verifica se o equipamento suporta a tensão de ensaio de corrente alternada, conforme sua classe de isolação sem ocorrer o rompimento da rigidez dielétrica/flash over e/ou os limites de correntes máxima admissível.",
+        "• ART do Ensaio Dielétrico: XXXXX/2026 ",
+        "• Equipamentos utilizados para realização do teste: Testador de Alta Tensão Alternada marca EEAT, modelo AT120050CADMT2SAURS232 120KVCA/100MA",
+        "• Certificado de Calibração Nº XXXXXX, realizado em XXXXX/2025 sendo aprovado nos ensaios, realizado pela empresa E.E.A.T Industria e Comercio LTDA.",
+        "• Condições ambientais: Temperatura 30°C | Umidade 50% | Pressão 970 mbar",
+        "• Incertezas: Tensão ± 0,05% | Corrente ± 0,01%"
     ];
 
     obs.forEach(l => {
