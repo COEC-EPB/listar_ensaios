@@ -338,46 +338,74 @@ async function gerarPDF(eEncoded) {
 
     let y = 30;
 
-    /* ==============================
-       DADOS DO LAUDO
-    =============================== */
-    doc.autoTable({
-        startY: y,
-        tableWidth: 120,
-        margin: { left: 14 },
-        head: [["Laudo", "Valor"]],
-        styles: { fontSize: 9 },
-        body: [
-            ["Laudo", "EPB/EBO"],
-            ["Certificado nº", e.aprovacao],
-            ["Mês do Ensaio", e.mes],
-            ["Regional", e.regional],
-            ["Localidade", e.localidade],
-            ["Departamento", e.departamento]
-        ]
-    });
+   /* ==============================
+   DADOS DO LAUDO + IMAGEM AO LADO
+============================== */
+const inicioBlocoY = y;
 
-    y = doc.lastAutoTable.finalY + 8;
+// --- TABELA LAUDO (ESQUERDA)
+doc.autoTable({
+    startY: inicioBlocoY,
+    tableWidth: 120,
+    margin: { left: 14 },
+    head: [["Laudo", "Valor"]],
+    styles: { fontSize: 9 },
+    body: [
+        ["Laudo", "EPB/EBO"],
+        ["Certificado nº", e.aprovacao],
+        ["Mês do Ensaio", e.mes],
+        ["Regional", e.regional],
+        ["Localidade", e.localidade],
+        ["Departamento", e.departamento]
+    ]
+});
 
-    /* ==============================
-       TABELA + IMAGEM
-    =============================== */
-    const blocoY = y;
+// FINAL DA TABELA
+const laudoFimY = doc.lastAutoTable.finalY;
 
-    doc.autoTable({
-        startY: blocoY,
-        tableWidth: 120,
-        margin: { left: 14 },
-        head: [["Campo", "Valor"]],
-        styles: { fontSize: 9 },
-        body: [
-            ["Equipamento", e.equipamentos],
-            ["Tipo de Ensaio", e.tipo_ensaio],
-            ["Norma Aplicada", e.norma]
-        ]
-    });
+// --- IMAGEM (DIREITA, ALINHADA COM LAUDO)
+let imgFimY = inicioBlocoY;
+const imagemEquip = getImagemEquipamento(e.equipamentos);
 
-    const tabelaFimY = doc.lastAutoTable.finalY;
+if (imagemEquip) {
+    const imgX = 145;
+    const imgW = 45;
+    const imgH = 45;
+
+    await addImage(imagemEquip, imgX, inicioBlocoY, imgW, imgH);
+
+    doc.setFont("Helvetica", "italic");
+    doc.setFontSize(7);
+    doc.text(
+        "*Imagem meramente ilustrativa",
+        imgX + imgW / 2,
+        inicioBlocoY + imgH + 5,
+        { align: "center" }
+    );
+
+    imgFimY = inicioBlocoY + imgH + 10;
+}
+
+// DEFINE Y PARA PRÓXIMO BLOCO (SEM BURACO)
+y = Math.max(laudoFimY, imgFimY) + 6;
+
+/* ==============================
+   DADOS DO ENSAIO (SOBE AUTOMATICO)
+============================== */
+doc.autoTable({
+    startY: y,
+    tableWidth: 120,
+    margin: { left: 14 },
+    head: [["Campo", "Valor"]],
+    styles: { fontSize: 9 },
+    body: [
+        ["Equipamento", e.equipamentos],
+        ["Tipo de Ensaio", e.tipo_ensaio],
+        ["Norma Aplicada", e.norma]
+    ]
+});
+
+y = doc.lastAutoTable.finalY + 8;
 
     let imgFimY = blocoY;
     const imagemEquip = getImagemEquipamento(e.equipamentos);
