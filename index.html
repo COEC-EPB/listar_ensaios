@@ -255,8 +255,9 @@ function aplicarFiltros() {
     renderizar(filtrados);
 }
 
-document.querySelectorAll("#filtroNome,#filtroEquipamento,#filtroAprovacao,#buscaGeral")
-    .forEach(el => el.addEventListener("input", aplicarFiltros));
+document.querySelectorAll(
+    "#filtroNome,#filtroEquipamento,#filtroAprovacao,#buscaGeral,#filtroData"
+).forEach(el => el.addEventListener("input", aplicarFiltros));
 
 /* ============================================================
    5. MODAL
