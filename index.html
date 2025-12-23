@@ -236,11 +236,16 @@ function aplicarFiltros() {
     let eqp = filtroEquipamento.value.toLowerCase();
     let aprov = filtroAprovacao.value;
     let geral = buscaGeral.value.toLowerCase();
-
-    const dataEnsaio = formatarData(e.data);
+    let dataFiltro = filtroData.value; // YYYY-MM-DD
 
     let filtrados = ensaiosOriginais.filter(e => {
-         return (
+
+        // Data do ensaio no formato YYYY-MM-DD
+        const dataEnsaio = e.data
+            ? new Date(e.data).toISOString().split("T")[0]
+            : "";
+
+        return (
             e.nome.toLowerCase().includes(nome) &&
             e.equipamentos.toLowerCase().includes(eqp) &&
             (aprov === "" ||
@@ -254,6 +259,7 @@ function aplicarFiltros() {
 
     renderizar(filtrados);
 }
+
 
 document.querySelectorAll(
     "#filtroNome,#filtroEquipamento,#filtroAprovacao,#buscaGeral,#filtroData"
