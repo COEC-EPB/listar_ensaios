@@ -72,6 +72,9 @@
     <div class="filtros">
         <input id="filtroNome" placeholder="Filtrar por nome">
         <input id="filtroEquipamento" placeholder="Filtrar por equipamento">
+        <!-- NOVO FILTRO DE DATA -->
+        <input id="filtroData" type="date">
+        
         <select id="filtroAprovacao">
             <option value="">Aprovação (todos)</option>
             <option value="-">Sem aprovação</option>
@@ -234,13 +237,16 @@ function aplicarFiltros() {
     let aprov = filtroAprovacao.value;
     let geral = buscaGeral.value.toLowerCase();
 
+    const dataEnsaio = formatarData(e.data);
+
     let filtrados = ensaiosOriginais.filter(e => {
-        return (
+         return (
             e.nome.toLowerCase().includes(nome) &&
             e.equipamentos.toLowerCase().includes(eqp) &&
             (aprov === "" ||
                 (aprov === "-" && !e.aprovacao) ||
                 (aprov === "ap" && e.aprovacao)) &&
+            (dataFiltro === "" || dataEnsaio === dataFiltro) &&
             (geral === "" ||
                 JSON.stringify(e).toLowerCase().includes(geral))
         );
