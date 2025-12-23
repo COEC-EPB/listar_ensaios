@@ -15,7 +15,7 @@
         padding: 30px;
     }
     .container {
-        max-width: 1300px;
+        max-width: 1400px;
         margin: auto;
         background: #fff;
         padding: 25px;
@@ -84,6 +84,7 @@
         <thead>
             <tr>
                 <th style="width:6%;">ID</th>
+                <th style="width:10%;">Data</th>
                 <th style="width:28%;">Nome</th>
                 <th style="width:36%;">Equipamentos</th>
                 <th style="width:10%;">Resultado</th>
@@ -107,6 +108,14 @@
 </div>
 
 <script>
+    /* ============================================================
+   DATA
+============================================================ */
+    function formatarData(data) {
+    if (!data) return "-";
+    const d = new Date(data);
+    return d.toLocaleDateString("pt-BR");
+}
 /* ============================================================
    1. NORMALIZAR TEXTO (sem acentos, UPPERCASE)
 ============================================================ */
@@ -206,6 +215,7 @@ function renderizar(lista) {
         tbody.innerHTML += `
             <tr>
                 <td>${e.id}</td>
+                <td>${formatarData(e.data)}</td>
                 <td>${e.nome}</td>
                 <td>${e.equipamentos}</td>
                 <td>${e.resultado}</td>
