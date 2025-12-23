@@ -240,10 +240,15 @@ function aplicarFiltros() {
 
     let filtrados = ensaiosOriginais.filter(e => {
 
-        // Data do ensaio no formato YYYY-MM-DD
-        const dataEnsaio = e.data
-            ? new Date(e.data).toISOString().split("T")[0]
-            : "";
+        // Data do ensaio SEM timezone
+        let dataEnsaio = "";
+        if (e.data) {
+            const d = new Date(e.data);
+            const ano = d.getFullYear();
+            const mes = String(d.getMonth() + 1).padStart(2, "0");
+            const dia = String(d.getDate()).padStart(2, "0");
+            dataEnsaio = `${ano}-${mes}-${dia}`;
+        }
 
         return (
             e.nome.toLowerCase().includes(nome) &&
