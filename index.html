@@ -2,524 +2,933 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Ensaios Dielétricos - Consulta (Modelo)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ensaios Dielétricos - Consulta</title>
+
+<!-- Ícones -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
 <!-- jsPDF + AutoTable -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
 <style>
-    body {
-        font-family: "Segoe UI", Arial;
-        background: #eef3f8;
-        padding: 30px;
-    }
-    .container {
-        max-width: 1400px;
-        margin: auto;
-        background: #fff;
-        padding: 25px;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0,0,0,.08);
-    }
-    h2 {
-        margin-bottom: 20px;
-        color: #003d66;
-    }
-    .filtros {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 15px;
-    }
-    .filtros input,
-    .filtros select {
-        padding: 10px;
-        font-size: 15px;
-        border-radius: 6px;
-        border: 1px solid #ccc;
-        width: 100%;
-    }
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        border-radius: 12px;
-        overflow: hidden;
-    }
-    th {
-        background: #0066a6;
-        color: #fff;
-        padding: 12px;
-        text-align: left;
-    }
-    td {
-        padding: 12px;
-        border-bottom: 1px solid #ddd;
-    }
-    tr:hover { background: #f2f8fc; }
-    .btn { padding: 7px 14px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: .2s; }
-    .btn-primary { background: #0077c2; color: #fff; }
-    .btn-primary:hover { background: #005f99; }
-    .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,.5); display:none; justify-content:center; align-items:center; }
-    .modal-content { background:white; padding:25px; border-radius:12px; width:320px; text-align:center; box-shadow:0 5px 20px rgba(0,0,0,.2); }
+  :root{
+    --primary:#0097CE;
+    --primary-dark:#007aa5;
+    --orange:#F36F21;
+    --bg:#eef3f8;
+    --card:#ffffff;
+    --text:#111827;
+    --muted:#6b7280;
+    --border:#e5e7eb;
+    --danger:#dc3545;
+    --shadow: 0 18px 60px rgba(0,0,0,.12);
+    --radius: 16px;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    font-family:"Segoe UI", Arial;
+    background:
+      radial-gradient(1200px 600px at 10% 0%, rgba(0,151,206,.18), transparent 55%),
+      radial-gradient(1000px 520px at 90% 15%, rgba(0,151,206,.10), transparent 60%),
+      var(--bg);
+    padding: 20px;
+    color: var(--text);
+  }
+
+  .brand{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    margin: 10px 0 16px 0;
+    color: var(--primary);
+    font-weight: 900;
+  }
+  .brand i{
+    width:44px;height:44px;border-radius: 14px;
+    display:flex;align-items:center;justify-content:center;
+    background: rgba(0,151,206,.12);
+    border: 1px solid rgba(0,151,206,.22);
+    font-size: 20px;
+  }
+
+  /* LOGIN */
+  #loginView{
+    width: min(460px, 100%);
+    margin: 0 auto;
+  }
+
+  .card{
+    max-width: 1400px;
+    margin: auto;
+    background: var(--card);
+    border: 1px solid rgba(229,231,235,.9);
+    padding: 0;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow:hidden;
+  }
+
+  .card-header{
+    padding: 18px 18px 10px 18px;
+    border-bottom: 1px solid rgba(229,231,235,.9);
+    background: linear-gradient(90deg, rgba(0,151,206,.10), rgba(0,151,206,.03));
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: 12px;
+  }
+
+  .title{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight: 950;
+    color: #003d66;
+  }
+
+  .badge{
+    font-size: 12px;
+    padding: 7px 10px;
+    border-radius: 999px;
+    background: rgba(0,151,206,.12);
+    border: 1px solid rgba(0,151,206,.22);
+    color: var(--primary-dark);
+    font-weight: 900;
+  }
+
+  .content{
+    padding: 16px 18px 18px 18px;
+  }
+
+  h2{
+    margin:0;
+    font-size: 18px;
+    color: #003d66;
+  }
+  .sub{
+    margin: 8px 0 0 0;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .grid-login{
+    display:grid;
+    gap: 12px;
+    padding: 16px 18px 18px 18px;
+  }
+
+  label{
+    font-size: 12px;
+    font-weight: 900;
+    color: #374151;
+    display:flex;
+    align-items:center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .field{ display:grid; gap:6px; }
+  .input-wrap{ position: relative; }
+
+  input, select{
+    width: 100%;
+    padding: 12px 12px 12px 42px;
+    font-size: 15px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    outline: none;
+    background: #fff;
+  }
+  input:focus, select:focus{
+    border-color: rgba(0,151,206,.6);
+    box-shadow: 0 0 0 4px rgba(0,151,206,.16);
+  }
+  .input-icon{
+    position:absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 16px;
+    pointer-events: none;
+  }
+
+  .btn{
+    padding: 10px 14px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 900;
+    transition: .15s;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap: 8px;
+  }
+  .btn-primary{ background: var(--primary); color:#fff; }
+  .btn-primary:hover{ background: var(--primary-dark); }
+  .btn-danger{ background: var(--danger); color:#fff; }
+  .btn-danger:hover{ filter: brightness(.92); }
+  .btn-warning{ background: var(--orange); color:#fff; }
+  .btn-warning:hover{ filter: brightness(.95); }
+  .btn-ghost{ background: #f3f4f6; color:#111827; border:1px solid #e5e7eb; }
+  .btn-ghost:hover{ background:#e5e7eb; }
+
+  .row-actions{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .erro{
+    display:none;
+    margin: 0 18px 18px 18px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(220,53,69,.25);
+    background: rgba(220,53,69,.10);
+    color: #b3261e;
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  /* VIEW */
+  #appView{ display:none; }
+
+  .filtros{
+    display:grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .filtros input,
+  .filtros select{
+    padding: 10px 12px;
+    font-size: 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    width: 100%;
+  }
+
+  .table-wrap{
+    width:100%;
+    overflow:auto;
+    border-radius: 14px;
+    border: 1px solid rgba(229,231,235,.9);
+  }
+
+  table{
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1100px;
+  }
+
+  th{
+    background: #0066a6;
+    color: #fff;
+    padding: 12px;
+    text-align: left;
+    font-size: 13px;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  td{
+    padding: 12px;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 14px;
+    background:#fff;
+    vertical-align: top;
+  }
+
+  tr:hover td{ background: #f6fbff; }
+
+  .actions-cell{
+    display:flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* MODAL */
+  .modal{
+    position: fixed;
+    top:0; left:0;
+    width:100%;
+    height:100%;
+    background: rgba(0,0,0,.5);
+    display:none;
+    justify-content:center;
+    align-items:center;
+    padding: 16px;
+    z-index: 50;
+  }
+  .modal-content{
+    background:white;
+    padding: 18px;
+    border-radius: 14px;
+    width: min(380px, 100%);
+    text-align:left;
+    box-shadow:0 20px 60px rgba(0,0,0,.25);
+    border: 1px solid rgba(229,231,235,.9);
+  }
+  .modal-content h3{ margin:0 0 10px 0; }
+  .modal-content input{
+    padding-left: 12px;
+  }
+  .modal-actions{
+    display:flex;
+    gap: 10px;
+    justify-content:flex-end;
+    margin-top: 12px;
+  }
+
+  @media (max-width: 980px){
+    .filtros{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 520px){
+    body{ padding: 12px; }
+    .filtros{ grid-template-columns: 1fr; }
+  }
 </style>
 </head>
+
 <body>
 
-<div class="container">
-    <h2>Ensaios Dielétricos Registrados</h2>
+<div class="brand">
+  <i class="bi bi-clipboard2-data"></i>
+  <span>Ensaios Dielétricos</span>
+</div>
 
-    <!-- FILTROS -->
-    <div class="filtros">
-        <input id="filtroNome" placeholder="Filtrar por nome">
-        <input id="filtroEquipamento" placeholder="Filtrar por equipamento">
-        <!-- NOVO FILTRO DE DATA -->
-        <input id="filtroData" type="date">
-        
-        <select id="filtroAprovacao">
-            <option value="">Aprovação (todos)</option>
-            <option value="-">Sem aprovação</option>
-            <option value="ap">Aprovados</option>
-        </select>
-        <input id="buscaGeral" placeholder="Busca inteligente (tudo)">
+<!-- LOGIN VIEW -->
+<div id="loginView">
+  <div class="card">
+    <div class="card-header">
+      <div class="title">
+        <i class="bi bi-shield-lock"></i>
+        <span>Entrar</span>
+      </div>
     </div>
 
-    <table id="tabela">
-        <thead>
+    <div class="content">
+      <h2>Acesso restrito</h2>
+      <p class="sub">Use sua matrícula e senha para consultar e aprovar ensaios.</p>
+    </div>
+
+    <form class="grid-login" onsubmit="event.preventDefault(); fazerLogin();">
+      <div class="field">
+        <label for="matricula"><i class="bi bi-person"></i> Matrícula</label>
+        <div class="input-wrap">
+          <i class="bi bi-person input-icon"></i>
+          <input type="text" id="matricula" placeholder="Digite sua matrícula" autocomplete="username">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="senha"><i class="bi bi-lock"></i> Senha</label>
+        <div class="input-wrap">
+          <i class="bi bi-lock input-icon"></i>
+          <input type="password" id="senha" placeholder="Digite sua senha" autocomplete="current-password">
+        </div>
+      </div>
+
+      <div class="row-actions">
+        <button class="btn btn-primary" type="submit">
+          <i class="bi bi-box-arrow-in-right"></i> Entrar
+        </button>
+        <button class="btn btn-ghost" type="button" onclick="limparLogin()">
+          <i class="bi bi-x-circle"></i> Limpar
+        </button>
+      </div>
+    </form>
+
+    <div class="erro" id="erro"></div>
+  </div>
+</div>
+
+<!-- APP VIEW -->
+<div id="appView">
+  <div class="card">
+    <div class="card-header">
+      <div class="title">
+        <i class="bi bi-clipboard-check"></i>
+        <span>Ensaios Dielétricos Registrados</span>
+        <span class="badge" id="badgeUser">logado</span>
+      </div>
+      <button class="btn btn-danger" onclick="logout()">
+        <i class="bi bi-box-arrow-right"></i> Sair
+      </button>
+    </div>
+
+    <div class="content">
+
+      <!-- FILTROS -->
+      <div class="filtros">
+        <input id="filtroNome" placeholder="Filtrar por nome">
+        <input id="filtroEquipamento" placeholder="Filtrar por equipamento">
+        <input id="filtroData" type="date">
+        <select id="filtroAprovacao">
+          <option value="">Aprovação (todos)</option>
+          <option value="-">Sem aprovação</option>
+          <option value="ap">Aprovados</option>
+        </select>
+        <input id="buscaGeral" placeholder="Busca inteligente (tudo)">
+      </div>
+
+      <div class="table-wrap">
+        <table id="tabela">
+          <thead>
             <tr>
-                <th style="width:6%;">ID</th>
-                <th style="width:10%;">Data</th>
-                <th style="width:10%;">Regional</th>
-                <th style="width:28%;">Nome</th>
-                <th style="width:36%;">Equipamentos</th>
-                <th style="width:10%;">Resultado</th>
-                <th style="width:10%;">Certificado nº:</th>
-                <th style="width:10%;">Ações</th>
+              <th style="width:6%;">ID</th>
+              <th style="width:10%;">Data</th>
+              <th style="width:10%;">Regional</th>
+              <th style="width:18%;">Nome</th>
+              <th style="width:30%;">Equipamentos</th>
+              <th style="width:10%;">Resultado</th>
+              <th style="width:10%;">Certificado nº</th>
+              <th style="width:16%;">Ações</th>
             </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
 </div>
 
 <!-- MODAL -->
 <div class="modal" id="modal">
-    <div class="modal-content">
-        <h3>Certificado nº:</h3>
-        <input id="numeroAprovacao" placeholder="000/2025">
-        <br><br>
-        <button class="btn btn-primary" onclick="salvarAprovacao()">Salvar</button>
-        <button class="btn" onclick="fecharModal()">Cancelar</button>
+  <div class="modal-content">
+    <h3>Certificado nº</h3>
+    <label for="numeroAprovacao">Número</label>
+    <input id="numeroAprovacao" placeholder="00001/2026">
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarAprovacao()">
+        <i class="bi bi-check2-circle"></i> Salvar
+      </button>
     </div>
+  </div>
 </div>
 
 <script>
-    /* ============================================================
+/* ============================================================
+   CONFIG
+============================================================ */
+const API = "https://ensai-dieletrico.pedro-fillype.workers.dev";
+
+/* ============================================================
+   UI HELPERS
+============================================================ */
+function showError(msg){
+  const el = document.getElementById("erro");
+  el.style.display = "block";
+  el.textContent = msg;
+}
+function clearError(){
+  const el = document.getElementById("erro");
+  el.style.display = "none";
+  el.textContent = "";
+}
+function showLogin(){
+  document.getElementById("loginView").style.display = "block";
+  document.getElementById("appView").style.display = "none";
+}
+function showApp(){
+  document.getElementById("loginView").style.display = "none";
+  document.getElementById("appView").style.display = "block";
+}
+
+/* ============================================================
+   LOGIN
+============================================================ */
+async function fazerLogin(){
+  clearError();
+
+  const matricula = (document.getElementById("matricula").value || "").trim();
+  const senha = (document.getElementById("senha").value || "").trim();
+
+  if(!matricula || !senha){
+    showError("Informe matrícula e senha.");
+    return;
+  }
+
+  try{
+    const r = await fetch(API + "/login", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ matricula, senha })
+    });
+
+    const j = await r.json().catch(() => ({}));
+
+    if(!r.ok){
+      showError(j.error || "Usuário ou senha inválidos.");
+      return;
+    }
+
+    localStorage.setItem("token", j.token);
+    localStorage.setItem("matricula", j.matricula || matricula);
+    document.getElementById("badgeUser").innerText = j.matricula || matricula;
+
+    showApp();
+    await carregarImagensGitHub();
+    await carregar();
+  }catch(e){
+    showError("Falha ao conectar no servidor. Tente novamente.");
+  }
+}
+
+function limparLogin(){
+  document.getElementById("matricula").value = "";
+  document.getElementById("senha").value = "";
+  clearError();
+}
+
+function logout(){
+  localStorage.removeItem("token");
+  localStorage.removeItem("matricula");
+  location.reload();
+}
+
+/* ============================================================
    DATA
 ============================================================ */
-    function formatarData(data) {
-    if (!data) return "-";
-    const d = new Date(data);
-    return d.toLocaleDateString("pt-BR");
+function formatarData(data) {
+  if (!data) return "-";
+  const d = new Date(data);
+  return d.toLocaleDateString("pt-BR");
 }
+
 /* ============================================================
-   1. NORMALIZAR TEXTO (sem acentos, UPPERCASE)
+   NORMALIZAR TEXTO (sem acentos, UPPERCASE)
 ============================================================ */
-    let proximoNumeroAprovacao = "";
+let proximoNumeroAprovacao = "";
 
 function normalizar(str) {
-    if (!str) return "";
-    return str
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toUpperCase()
-        .trim();
+  if (!str) return "";
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .trim();
 }
 
 /* ============================================================
-   2. CARREGAR IMAGENS DO GITHUB
+   CARREGAR IMAGENS DO GITHUB
 ============================================================ */
-const GITHUB_API =
-    "https://api.github.com/repos/COEC-EPB/listar_ensaios/contents/";
-
-const GITHUB_RAW =
-    "https://raw.githubusercontent.com/COEC-EPB/listar_ensaios/main/";
-
+const GITHUB_API = "https://api.github.com/repos/COEC-EPB/listar_ensaios/contents/";
+const GITHUB_RAW = "https://raw.githubusercontent.com/COEC-EPB/listar_ensaios/main/";
 let mapaImagens = {};
 
 async function carregarImagensGitHub() {
-    try {
-        const r = await fetch(GITHUB_API);
-        const arquivos = await r.json();
+  try {
+    const r = await fetch(GITHUB_API);
+    const arquivos = await r.json();
 
-        arquivos.forEach(arq => {
-            if (!arq.name.match(/\.(png|jpg|jpeg|jfif|tif)$/i)) return;
+    arquivos.forEach(arq => {
+      if (!arq.name.match(/\.(png|jpg|jpeg|jfif|tif)$/i)) return;
 
-            let nomeOriginal = arq.name.replace(/\.(png|jpg|jpeg|jfif|tif)$/i, "");
-            let chave = normalizar(nomeOriginal);
-
-            mapaImagens[chave] = GITHUB_RAW + encodeURIComponent(arq.name);
-        });
-
-        console.log("Imagens carregadas:", mapaImagens);
-    } catch (err) {
-        console.error("Erro ao carregar imagens:", err);
-    }
+      let nomeOriginal = arq.name.replace(/\.(png|jpg|jpeg|jfif|tif)$/i, "");
+      let chave = normalizar(nomeOriginal);
+      mapaImagens[chave] = GITHUB_RAW + encodeURIComponent(arq.name);
+    });
+  } catch (err) {
+    console.error("Erro ao carregar imagens:", err);
+  }
 }
 
 function getImagemEquipamento(equipamento) {
-    return mapaImagens[normalizar(equipamento)] || null;
+  return mapaImagens[normalizar(equipamento)] || null;
 }
 
 /* ============================================================
-   3. LISTAGEM
+   LISTAGEM
 ============================================================ */
 let ensaiosOriginais = [];
-const API = "https://ensai-dieletrico.pedro-fillype.workers.dev";
 
 async function carregar() {
-    const r = await fetch(`${API}/listar-ensaios`);
-    ensaiosOriginais = await r.json();
+  const token = localStorage.getItem("token");
+  if(!token){
+    showLogin();
+    return;
+  }
 
-    // PEGAR O ÚLTIMO NÚMERO DE APROVAÇÃO
-    const anoAtual = new Date().getFullYear();
+  const r = await fetch(`${API}/listar-ensaios`, {
+    headers: { "Authorization": "Bearer " + token }
+  });
 
-    // Filtra apenas ensaios aprovados com formato válido: 00001/2025
-    const numeros = ensaiosOriginais
-        .filter(e => e.aprovacao && e.aprovacao.includes("/"))
-        .map(e => Number(e.aprovacao.split("/")[0]));
+  const j = await r.json().catch(() => ({}));
 
-    let ultimo = 0;
-    if (numeros.length > 0) {
-        ultimo = Math.max(...numeros);
-    }
+  if(!r.ok){
+    alert(j.error || "Falha ao carregar lista.");
+    if(r.status === 401) logout();
+    return;
+  }
 
-    // Gera próximo número formatado: 00001/2025
-    const seq = String(ultimo + 1).padStart(5, "0");
-    proximoNumeroAprovacao = `${seq}/${anoAtual}`;
+  ensaiosOriginais = j;
 
-    console.log("Próximo número de aprovação:", proximoNumeroAprovacao);
+  // PEGAR O ÚLTIMO NÚMERO DE APROVAÇÃO
+  const anoAtual = new Date().getFullYear();
+  const numeros = ensaiosOriginais
+    .filter(e => e.aprovacao && e.aprovacao.includes("/"))
+    .map(e => Number(e.aprovacao.split("/")[0]));
 
-    renderizar(ensaiosOriginais);
+  let ultimo = 0;
+  if (numeros.length > 0) ultimo = Math.max(...numeros);
+
+  const seq = String(ultimo + 1).padStart(5, "0");
+  proximoNumeroAprovacao = `${seq}/${anoAtual}`;
+
+  renderizar(ensaiosOriginais);
 }
 
-
 function renderizar(lista) {
-    const tbody = document.querySelector("#tabela tbody");
-    tbody.innerHTML = "";
+  const tbody = document.querySelector("#tabela tbody");
+  tbody.innerHTML = "";
 
-    lista.forEach(e => {
+  lista.forEach(e => {
 
-        const btnPdf = e.aprovacao
-            ? `<button class='btn btn-primary' onclick='gerarPDF("${encodeURIComponent(JSON.stringify(e))}")'>Gerar PDF</button>`
-            : `<button class='btn btn-primary' onclick='alert("Este ensaio não possui número de certificação. O laudo não pode ser gerado.")'>Gerar PDF</button>`;
+    const btnPdf = e.aprovacao
+      ? `<button class="btn btn-primary" onclick='gerarPDF("${encodeURIComponent(JSON.stringify(e))}")'><i class="bi bi-filetype-pdf"></i> PDF</button>`
+      : `<button class="btn btn-primary" onclick='alert("Este ensaio não possui número de certificação. O laudo não pode ser gerado.")'><i class="bi bi-filetype-pdf"></i> PDF</button>`;
 
-        const btnAprovar = e.aprovacao
-            ? `<button class="btn" disabled style="background:#ccc;color:#333;">Aprovado</button>`
-            : `<button class="btn" style="background:#f36f21;color:#fff;" onclick="abrirModal(${e.id})">Aprovar</button>`;
+    const btnAprovar = e.aprovacao
+      ? `<button class="btn btn-ghost" disabled><i class="bi bi-check2-circle"></i> Aprovado</button>`
+      : `<button class="btn btn-warning" onclick="abrirModal(${e.id})"><i class="bi bi-check2"></i> Aprovar</button>`;
 
-        tbody.innerHTML += `
-            <tr>
-                <td>${e.id}</td>
-                <td>${formatarData(e.data)}</td>
-                <td>${e.regional}</td>
-                <td>${e.nome}</td>
-                <td>${e.equipamentos}</td>
-                <td>${e.resultado}</td>
-                <td>${e.aprovacao ?? "-"}</td>
-                <td style="display:flex;gap:6px;">${btnPdf} ${btnAprovar}</td>
-            </tr>`;
-    });
+    const btnExcluir = `<button class="btn btn-danger" onclick="excluirEnsaio(${e.id})"><i class="bi bi-trash3"></i> Excluir</button>`;
+
+    tbody.innerHTML += `
+      <tr>
+        <td>${e.id}</td>
+        <td>${formatarData(e.data)}</td>
+        <td>${e.regional || "-"}</td>
+        <td>${e.nome || "-"}</td>
+        <td>${e.equipamentos || "-"}</td>
+        <td>${e.resultado || "-"}</td>
+        <td>${e.aprovacao ?? "-"}</td>
+        <td class="actions-cell">${btnPdf} ${btnAprovar} ${btnExcluir}</td>
+      </tr>`;
+  });
 }
 
 /* ============================================================
-   4. FILTROS
+   FILTROS
 ============================================================ */
 function aplicarFiltros() {
-    let nome = filtroNome.value.toLowerCase();
-    let eqp = filtroEquipamento.value.toLowerCase();
-    let aprov = filtroAprovacao.value;
-    let geral = buscaGeral.value.toLowerCase();
-    let dataFiltro = filtroData.value; // YYYY-MM-DD
+  let nome = (filtroNome.value || "").toLowerCase();
+  let eqp = (filtroEquipamento.value || "").toLowerCase();
+  let aprov = filtroAprovacao.value;
+  let geral = (buscaGeral.value || "").toLowerCase();
+  let dataFiltro = filtroData.value; // YYYY-MM-DD
 
-    let filtrados = ensaiosOriginais.filter(e => {
+  let filtrados = ensaiosOriginais.filter(e => {
 
-        // Data do ensaio SEM timezone
-        let dataEnsaio = "";
-        if (e.data) {
-            const d = new Date(e.data);
-            const ano = d.getFullYear();
-            const mes = String(d.getMonth() + 1).padStart(2, "0");
-            const dia = String(d.getDate()).padStart(2, "0");
-            dataEnsaio = `${ano}-${mes}-${dia}`;
-        }
+    // Data do ensaio (YYYY-MM-DD)
+    let dataEnsaio = "";
+    if (e.data) {
+      const d = new Date(e.data);
+      const ano = d.getFullYear();
+      const mes = String(d.getMonth() + 1).padStart(2, "0");
+      const dia = String(d.getDate()).padStart(2, "0");
+      dataEnsaio = `${ano}-${mes}-${dia}`;
+    }
 
-        return (
-            e.nome.toLowerCase().includes(nome) &&
-            e.equipamentos.toLowerCase().includes(eqp) &&
-            (aprov === "" ||
-                (aprov === "-" && !e.aprovacao) ||
-                (aprov === "ap" && e.aprovacao)) &&
-            (dataFiltro === "" || dataEnsaio === dataFiltro) &&
-            (geral === "" ||
-                JSON.stringify(e).toLowerCase().includes(geral))
-        );
-    });
+    return (
+      String(e.nome || "").toLowerCase().includes(nome) &&
+      String(e.equipamentos || "").toLowerCase().includes(eqp) &&
+      (aprov === "" ||
+        (aprov === "-" && !e.aprovacao) ||
+        (aprov === "ap" && !!e.aprovacao)) &&
+      (dataFiltro === "" || dataEnsaio === dataFiltro) &&
+      (geral === "" || JSON.stringify(e).toLowerCase().includes(geral))
+    );
+  });
 
-    renderizar(filtrados);
+  renderizar(filtrados);
 }
 
-
 document.querySelectorAll(
-    "#filtroNome,#filtroEquipamento,#filtroAprovacao,#buscaGeral,#filtroData"
+  "#filtroNome,#filtroEquipamento,#filtroAprovacao,#buscaGeral,#filtroData"
 ).forEach(el => el.addEventListener("input", aplicarFiltros));
 
 /* ============================================================
-   5. MODAL
+   MODAL APROVAÇÃO
 ============================================================ */
 let ensaioSelecionado = null;
 
 function abrirModal(id) {
-    ensaioSelecionado = id;
-
-    // Preencher automaticamente com o próximo número
-    document.getElementById("numeroAprovacao").value = proximoNumeroAprovacao;
-
-    modal.style.display = "flex";
+  ensaioSelecionado = id;
+  document.getElementById("numeroAprovacao").value = proximoNumeroAprovacao;
+  modal.style.display = "flex";
 }
-
 function fecharModal() {
-    modal.style.display = "none";
+  modal.style.display = "none";
 }
 
 async function salvarAprovacao() {
-    const aprov = numeroAprovacao.value.trim();
+  const aprov = numeroAprovacao.value.trim();
+  if (!aprov) {
+    alert("Digite o número de aprovação.");
+    return;
+  }
 
-    if (!aprov) {
-        alert("Digite o número de aprovação.");
-        return;
-    }
+  const token = localStorage.getItem("token");
+  if(!token){
+    alert("Sessão expirada.");
+    logout();
+    return;
+  }
 
-    await fetch(`${API}/salvar-aprovacao`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: ensaioSelecionado, aprovacao: aprov })
-    });
+  const r = await fetch(`${API}/salvar-aprovacao`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + token
+    },
+    body: JSON.stringify({ id: ensaioSelecionado, aprovacao: aprov })
+  });
 
-    fecharModal();
-    carregar();
+  const j = await r.json().catch(() => ({}));
+  if(!r.ok){
+    alert(j.error || "Erro ao salvar aprovação.");
+    return;
+  }
+
+  fecharModal();
+  carregar();
 }
 
 /* ============================================================
-   6. GERAR PDF (LAYOUT FINAL CORRIGIDO)
+   EXCLUIR
+============================================================ */
+async function excluirEnsaio(id){
+  const ok = confirm(`Tem certeza que deseja excluir o ensaio ID ${id}?`);
+  if(!ok) return;
+
+  const token = localStorage.getItem("token");
+  if(!token){
+    alert("Sessão expirada.");
+    logout();
+    return;
+  }
+
+  const r = await fetch(`${API}/excluir-ensaio?id=${id}`, {
+    method: "DELETE",
+    headers: { "Authorization": "Bearer " + token }
+  });
+
+  const j = await r.json().catch(() => ({}));
+  if(!r.ok){
+    alert((j.error || "Erro ao excluir.") + (j.detail ? "\n\n" + j.detail : ""));
+    return;
+  }
+
+  alert("Ensaio excluído!");
+  carregar();
+}
+
+/* ============================================================
+   GERAR PDF (seu layout original)
 ============================================================ */
 async function gerarPDF(eEncoded) {
 
-    const e = JSON.parse(decodeURIComponent(eEncoded));
+  const e = JSON.parse(decodeURIComponent(eEncoded));
 
-    if (!e.aprovacao) {
-        alert("Este ensaio não possui número de certificação. O laudo não pode ser gerado.");
-        return;
-    }
+  if (!e.aprovacao) {
+    alert("Este ensaio não possui número de certificação. O laudo não pode ser gerado.");
+    return;
+  }
 
-    const meses = [
-        "01 - JANEIRO","02 - FEVEREIRO","03 - MARÇO","04 - ABRIL",
-        "05 - MAIO","06 - JUNHO","07 - JULHO","08 - AGOSTO",
-        "09 - SETEMBRO","10 - OUTUBRO","11 - NOVEMBRO","12 - DEZEMBRO"
-    ];
-    e.mes = meses[new Date(e.data).getMonth()];
+  const meses = [
+    "01 - JANEIRO","02 - FEVEREIRO","03 - MARÇO","04 - ABRIL",
+    "05 - MAIO","06 - JUNHO","07 - JULHO","08 - AGOSTO",
+    "09 - SETEMBRO","10 - OUTUBRO","11 - NOVEMBRO","12 - DEZEMBRO"
+  ];
+  e.mes = meses[new Date(e.data).getMonth()];
 
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
 
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const pageWidth  = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const pageWidth  = doc.internal.pageSize.getWidth();
 
-    /* ==============================
-       FUNÇÃO AUXILIAR – IMAGEM
-    =============================== */
-    async function addImage(path, x, y, w, h) {
-        const res = await fetch(path);
-        const blob = await res.blob();
+  async function addImage(path, x, y, w, h) {
+    const res = await fetch(path);
+    const blob = await res.blob();
 
-        return new Promise(resolve => {
-            const reader = new FileReader();
-            reader.onload = () => {
-                const ext = path.split(".").pop().toUpperCase();
-                doc.addImage(
-                    reader.result,
-                    ext === "PNG" ? "PNG" : "JPEG",
-                    x, y, w, h
-                );
-                resolve();
-            };
-            reader.readAsDataURL(blob);
-        });
-    }
-
-    /* ==============================
-       CABEÇALHO
-    =============================== */
-    if (mapaImagens["ENERGISA"]) {
-        await addImage(mapaImagens["ENERGISA"], 14, 8, 30, 18);
-    }
-
-    doc.setFont("Helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text("LAUDO DE ENSAIO DIELÉTRICO", pageWidth / 2, 16, { align: "center" });
-
-    let y = 30;
-
-    /* ==============================
-       LAUDO + IMAGEM AO LADO
-    =============================== */
-    const inicioBlocoY = y;
-
-    // TABELA LAUDO (ESQUERDA)
-    doc.autoTable({
-        startY: inicioBlocoY,
-        tableWidth: 120,
-        margin: { left: 14 },
-        head: [["Laudo", "Valor"]],
-        styles: { fontSize: 9 },
-        body: [
-            ["Laudo", "EPB/EBO"],
-            ["Certificado nº", e.aprovacao],
-            ["Mês do Ensaio", e.mes],
-            ["Regional", e.regional],
-            ["Localidade", e.localidade],
-            ["Departamento", e.departamento]
-        ]
-    });
-
-    const laudoFimY = doc.lastAutoTable.finalY;
-
-    // IMAGEM (DIREITA)
-    let imgFimY = inicioBlocoY;
-    const imagemEquip = getImagemEquipamento(e.equipamentos);
-
-    if (imagemEquip) {
-        const imgX = 145;
-        const imgW = 45;
-        const imgH = 45;
-
-        await addImage(imagemEquip, imgX, inicioBlocoY, imgW, imgH);
-
-        doc.setFont("Helvetica", "italic");
-        doc.setFontSize(7);
-        doc.text(
-            "*Imagem meramente ilustrativa",
-            imgX + imgW / 2,
-            inicioBlocoY + imgH + 5,
-            { align: "center" }
+    return new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const ext = path.split(".").pop().toUpperCase();
+        doc.addImage(
+          reader.result,
+          ext === "PNG" ? "PNG" : "JPEG",
+          x, y, w, h
         );
-
-        imgFimY = inicioBlocoY + imgH + 10;
-    }
-
-    // PRÓXIMO BLOCO
-    y = Math.max(laudoFimY, imgFimY) + 6;
-
-    /* ==============================
-       DADOS DO ENSAIO
-    =============================== */
-    doc.autoTable({
-        startY: y,
-        tableWidth: 120,
-        margin: { left: 14 },
-        head: [["Campo", "Valor"]],
-        styles: { fontSize: 9 },
-        body: [
-            ["Equipamento", e.equipamentos],
-            ["Tipo de Ensaio", e.tipo_ensaio],
-            ["Norma Aplicada", e.norma]
-        ]
+        resolve();
+      };
+      reader.readAsDataURL(blob);
     });
+  }
 
-    y = doc.lastAutoTable.finalY + 8;
+  // Cabeçalho
+  if (mapaImagens["ENERGISA"]) {
+    await addImage(mapaImagens["ENERGISA"], 14, 8, 30, 18);
+  }
 
-    /* ==============================
-       RESULTADOS
-    =============================== */
-    const rows = [];
-    for (let i = Number(e.cod_inicial); i <= Number(e.cod_final); i++) {
-        rows.push([
-            i,
-            `${e.corrente_fuga} µA`,
-            e.resultado.toUpperCase()
-        ]);
+  doc.setFont("Helvetica", "bold");
+  doc.setFontSize(16);
+  doc.text("LAUDO DE ENSAIO DIELÉTRICO", pageWidth / 2, 16, { align: "center" });
+
+  let y = 30;
+
+  const inicioBlocoY = y;
+
+  doc.autoTable({
+    startY: inicioBlocoY,
+    tableWidth: 120,
+    margin: { left: 14 },
+    head: [["Laudo", "Valor"]],
+    styles: { fontSize: 9 },
+    body: [
+      ["Laudo", "EPB/EBO"],
+      ["Certificado nº", e.aprovacao],
+      ["Mês do Ensaio", e.mes],
+      ["Regional", e.regional],
+      ["Localidade", e.localidade],
+      ["Departamento", e.departamento]
+    ]
+  });
+
+  const laudoFimY = doc.lastAutoTable.finalY;
+
+  let imgFimY = inicioBlocoY;
+  const imagemEquip = getImagemEquipamento(e.equipamentos);
+
+  if (imagemEquip) {
+    const imgX = 145;
+    const imgW = 45;
+    const imgH = 45;
+
+    await addImage(imagemEquip, imgX, inicioBlocoY, imgW, imgH);
+
+    doc.setFont("Helvetica", "italic");
+    doc.setFontSize(7);
+    doc.text("*Imagem meramente ilustrativa", imgX + imgW / 2, inicioBlocoY + imgH + 5, { align: "center" });
+
+    imgFimY = inicioBlocoY + imgH + 10;
+  }
+
+  y = Math.max(laudoFimY, imgFimY) + 6;
+
+  doc.autoTable({
+    startY: y,
+    tableWidth: 120,
+    margin: { left: 14 },
+    head: [["Campo", "Valor"]],
+    styles: { fontSize: 9 },
+    body: [
+      ["Equipamento", e.equipamentos],
+      ["Tipo de Ensaio", e.tipo_ensaio],
+      ["Norma Aplicada", e.norma]
+    ]
+  });
+
+  y = doc.lastAutoTable.finalY + 8;
+
+  const rows = [];
+  for (let i = Number(e.cod_inicial); i <= Number(e.cod_final); i++) {
+    rows.push([ i, `${e.corrente_fuga} µA`, String(e.resultado || "").toUpperCase() ]);
+  }
+
+  doc.autoTable({
+    startY: y,
+    head: [["Código Rastreamento", "Corrente de Fuga", "Resultado"]],
+    styles: { fontSize: 9 },
+    body: rows,
+    margin: { left: 14, right: 14 }
+  });
+
+  y = doc.lastAutoTable.finalY + 8;
+
+  doc.setFont("Helvetica", "bold");
+  doc.text("Observações", 14, y);
+  y += 6;
+
+  doc.setFont("Helvetica", "bolditalic");
+  doc.setFontSize(7.5);
+
+  const obs = [
+    "• Os EPI’s e EPC’s que estiverem com o codigo de rastreio e o ano de ensaio referente ao laudo tecnico, estão aprovadas para ser utilizado ",
+    "em campo.",
+    "• Ensaio de tensão aplicada: Verifica se o equipamento suporta a tensão de ensaio de corrente alternada, conforme sua classe de isolação ",
+    "sem ocorrer o rompimento da rigidez dielétrica/flash over e/ou os limites de correntes máxima admissível.",
+    "• ART do Ensaio Dielétrico: XXXXX/2026 ",
+    "• Equipamentos utilizados para realização do teste: Testador de Alta Tensão Alternada marca EEAT, ",
+    "modelo AT120050CADMT2SAURS232 120KVCA/100MA",
+    "• Certificado de Calibração Nº XXXXXX, realizado em XXXXX/2025 sendo aprovado nos ensaios, realizado pela empresa E.E.A.T Industria ",
+    "e Comercio LTDA.",
+    "• Condições ambientais: Temperatura 30°C | Umidade 50% | Pressão 970 mbar",
+    "• Incertezas: Tensão ± 0,05% | Corrente ± 0,01%"
+  ];
+
+  obs.forEach(l => {
+    if (y > pageHeight - 30) {
+      doc.addPage();
+      y = 20;
     }
+    doc.text(l, 14, y);
+    y += 5;
+  });
 
-    doc.autoTable({
-        startY: y,
-        head: [["Código Rastreamento", "Corrente de Fuga", "Resultado"]],
-        styles: { fontSize: 9 },
-        body: rows,
-        margin: { left: 14, right: 14 }
-    });
+  if (y > pageHeight - 40) {
+    doc.addPage();
+    y = 30;
+  }
 
-    y = doc.lastAutoTable.finalY + 8;
+  doc.text("__________________________________________", pageWidth / 2, y, { align: "center" });
+  y += 6;
 
-    /* ==============================
-       OBSERVAÇÕES
-    =============================== */
-    doc.setFont("Helvetica", "bold");
-    doc.text("Observações", 14, y);
-    y += 6;
+  doc.setFont("Helvetica", "bold");
+  doc.text("Wesley Fernandes de Souza", pageWidth / 2, y, { align: "center" });
+  y += 6;
 
-    doc.setFont("Helvetica", "bolditalic");
-    doc.setFontSize(7.5);
+  doc.setFont("Helvetica", "normal");
+  doc.text("Responsável Técnico – CREA-PB: 1605187852", pageWidth / 2, y, { align: "center" });
 
-    const obs = [
-        "• Os EPI’s e EPC’s que estiverem com o codigo de rastreio e o ano de ensaio referente ao laudo tecnico, estão aprovadas para ser utilizado ",
-        "em campo.",
-        "• Ensaio de tensão aplicada: Verifica se o equipamento suporta a tensão de ensaio de corrente alternada, conforme sua classe de isolação ",
-        "sem ocorrer o rompimento da rigidez dielétrica/flash over e/ou os limites de correntes máxima admissível.",
-        "• ART do Ensaio Dielétrico: XXXXX/2026 ",
-        "• Equipamentos utilizados para realização do teste: Testador de Alta Tensão Alternada marca EEAT, ",
-        "modelo AT120050CADMT2SAURS232 120KVCA/100MA",
-        "• Certificado de Calibração Nº XXXXXX, realizado em XXXXX/2025 sendo aprovado nos ensaios, realizado pela empresa E.E.A.T Industria ",
-        "e Comercio LTDA.",
-        "• Condições ambientais: Temperatura 30°C | Umidade 50% | Pressão 970 mbar",
-        "• Incertezas: Tensão ± 0,05% | Corrente ± 0,01%"
-    ];
-
-    obs.forEach(l => {
-        if (y > pageHeight - 30) {
-            doc.addPage();
-            y = 20;
-        }
-        doc.text(l, 14, y);
-        y += 5;
-    });
-
-    /* ==============================
-       ASSINATURA
-    =============================== */
-    if (y > pageHeight - 40) {
-        doc.addPage();
-        y = 30;
-    }
-
-    doc.text("__________________________________________", pageWidth / 2, y, { align: "center" });
-    y += 6;
-
-    doc.setFont("Helvetica", "bold");
-    doc.text("Wesley Fernandes de Souza", pageWidth / 2, y, { align: "center" });
-    y += 6;
-
-    doc.setFont("Helvetica", "normal");
-    doc.text("Responsável Técnico – CREA-PB: 1605187852", pageWidth / 2, y, { align: "center" });
-
-    doc.save(`laudo_${e.id}.pdf`);
+  doc.save(`laudo_${e.id}.pdf`);
 }
-(async () => {
+
+/* ============================================================
+   BOOT
+============================================================ */
+window.addEventListener("load", async () => {
+  const token = localStorage.getItem("token");
+  const matricula = localStorage.getItem("matricula") || "logado";
+
+  if(token){
+    document.getElementById("badgeUser").innerText = matricula;
+    showApp();
     await carregarImagensGitHub();
-    carregar();
-})();
+    await carregar();
+  }else{
+    showLogin();
+  }
+});
 </script>
-
-
-
-
 
 </body>
 </html>
