@@ -170,6 +170,7 @@
   .btn-ghost{ background: #f3f4f6; color:#111827; border:1px solid #e5e7eb; }
   .btn-ghost:hover{ background:#e5e7eb; }
   .btn:active{ transform: translateY(1px); }
+  .btn[disabled]{ opacity:.7; cursor:not-allowed; }
 
   .row-actions{
     display:flex;
@@ -191,7 +192,7 @@
 
   #appView{ display:none; }
 
-  /* FILTROS: agora com selects */
+  /* FILTROS */
   .filtros{
     display:grid;
     grid-template-columns: 1.2fr 1.2fr .9fr 1fr 1.4fr;
@@ -242,31 +243,25 @@
 
   tr:hover td{ background: #f6fbff; }
 
-  /* Botões de ação mais “bonitos” e alinhados */
+  /* ✅ AÇÕES — MAIS ESPAÇADAS E SEM “COLAR” */
   .actions-cell{
-  display: flex;
-  flex-direction: column;   /* empilha */
-  gap: 8px;
-  align-items: stretch;
-  min-width: 140px;         /* evita esmagar demais */
-}
-
-.actions-cell .btn{
-  width: 100%;
-  justify-content: center;
-  white-space: nowrap;      /* não quebra texto */
-  line-height: 1;
-  padding: 10px 12px;
-}
-  .btn-mini{
-  width: 100%;
-  justify-content: center;
-  padding: 10px 12px;
-  border-radius: 12px; /* menos “pílula” e mais alinhado */
-  font-size: 13px;
-}
-
-
+    padding: 12px;
+    display: block !important;  /* evita herança do td no modo card */
+    min-width: 170px;
+  }
+  .actions{
+    display: flex;
+    flex-direction: column;
+    gap: 12px;                  /* ✅ espaçamento entre botões */
+  }
+  .actions .btn{
+    width: 100%;
+    justify-content: center;
+    white-space: nowrap;
+    line-height: 1.1;
+    padding: 12px 14px;         /* ✅ botão mais alto */
+    border-radius: 14px;
+  }
 
   /* MODAL */
   .modal{
@@ -300,20 +295,22 @@
     flex-wrap: wrap;
   }
 
-  /* RESPONSIVO MELHOR: filtros e header */
- /* no mobile: 1 por linha */
-@media (max-width: 520px){
-  .actions-cell{ min-width: 120px; }
-  .actions-cell .btn{ font-size: 13px; padding: 9px 10px; }
-}
+  @media (max-width: 980px){
+    .filtros{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
   @media (max-width: 520px){
     body{ padding: 10px; }
     .filtros{ grid-template-columns: 1fr; }
     .card-header{ padding: 12px; }
     .content{ padding: 12px; }
+
+    .actions-cell{ min-width: 140px; padding: 12px; }
+    .actions{ gap: 12px; }
+    .actions .btn{ padding: 12px 12px; font-size: 13px; }
   }
 
-  /* ✅ Modo celular: tabela vira cards (muito mais usável) */
+  /* ✅ Modo celular: tabela vira cards */
   @media (max-width: 820px){
     .table-wrap{ border: none; overflow: visible; }
     table{ min-width: 0; }
@@ -343,7 +340,6 @@
     }
     td.actions-cell{ display:block; }
     td.actions-cell::before{ display:none; }
-    .actions{ padding: 10px 12px 12px 12px; }
   }
 </style>
 </head>
@@ -410,15 +406,16 @@
         <span>Ensaios Dielétricos Registrados</span>
         <span class="badge" id="badgeUser">logado</span>
       </div>
-      <div style="display:flex; gap:10px; align-items:center;">
-  <a class="btn btn-ghost" href="https://coec-epb.github.io/ensaio_dieletrico/">
-    <i class="bi bi-arrow-left"></i> Voltar
-  </a>
 
-  <button class="btn btn-danger" onclick="logout()">
-    <i class="bi bi-box-arrow-right"></i> Sair
-  </button>
-</div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <a class="btn btn-ghost" href="https://coec-epb.github.io/ensaio_dieletrico/">
+          <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+
+        <button class="btn btn-danger" onclick="logout()">
+          <i class="bi bi-box-arrow-right"></i> Sair
+        </button>
+      </div>
     </div>
 
     <div class="content">
@@ -509,7 +506,6 @@ function showApp(){
   document.getElementById("loginView").style.display = "none";
   document.getElementById("appView").style.display = "block";
 }
-  
 
 /* ============================================================
    LOGIN
@@ -558,11 +554,6 @@ function limparLogin(){
 }
 
 function logout(){
-  localStorage.removeItem("token");
-  localStorage.removeItem("matricula");
-  location.reload();
-}
-  function logout(){
   localStorage.removeItem("token");
   localStorage.removeItem("matricula");
   window.location.href = "https://coec-epb.github.io/ensaio_dieletrico/";
@@ -634,10 +625,8 @@ async function carregar() {
 
   ensaiosOriginais = j;
 
-  // Popular selects (nome/equipamento)
   popularFiltrosPorLista(ensaiosOriginais);
 
-  // Próximo número de aprovação
   const anoAtual = new Date().getFullYear();
   const numeros = ensaiosOriginais
     .filter(e => e.aprovacao && String(e.aprovacao).includes("/"))
@@ -662,14 +651,12 @@ function popularFiltrosPorLista(lista){
   const equipamentos = [...new Set(lista.map(e => (e.equipamentos || "").trim()).filter(Boolean))]
     .sort((a,b) => a.localeCompare(b, "pt-BR", { sensitivity: "base" }));
 
-  // reset mantendo o primeiro option
   selNome.innerHTML = `<option value="">Nome (todos)</option>` +
     nomes.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join("");
 
   selEqp.innerHTML = `<option value="">Equipamento (todos)</option>` +
     equipamentos.map(x => `<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join("");
 
-  // tenta restaurar seleções
   selNome.value = nomeAtual;
   selEqp.value = eqpAtual;
 }
@@ -680,14 +667,16 @@ function renderizar(lista) {
 
   lista.forEach(e => {
     const btnPdf = `<button class="btn btn-primary" onclick='gerarPDF("${encodeURIComponent(JSON.stringify(e))}")'>
-  <i class="bi bi-filetype-pdf"></i> PDF
-</button>`;
+      <i class="bi bi-filetype-pdf"></i> PDF
+    </button>`;
 
-const btnAprovar = e.aprovacao
-  ? `<button class="btn btn-ghost" disabled><i class="bi bi-check2-circle"></i> Aprovado</button>`
-  : `<button class="btn btn-warning" onclick="abrirModal(${e.id})"><i class="bi bi-check2"></i> Aprovar</button>`;
+    const btnAprovar = e.aprovacao
+      ? `<button class="btn btn-ghost" disabled><i class="bi bi-check2-circle"></i> Aprovado</button>`
+      : `<button class="btn btn-warning" onclick="abrirModal(${e.id})"><i class="bi bi-check2"></i> Aprovar</button>`;
 
-const btnExcluir = `<button class="btn btn-danger" onclick="excluirEnsaio(${e.id})"><i class="bi bi-trash3"></i> Excluir</button>`;
+    const btnExcluir = `<button class="btn btn-danger" onclick="excluirEnsaio(${e.id})">
+      <i class="bi bi-trash3"></i> Excluir
+    </button>`;
 
     tbody.innerHTML += `
       <tr>
@@ -699,12 +688,12 @@ const btnExcluir = `<button class="btn btn-danger" onclick="excluirEnsaio(${e.id
         <td data-label="Resultado">${e.resultado || "-"}</td>
         <td data-label="Certificado nº">${e.aprovacao ?? "-"}</td>
         <td class="actions-cell" data-label="Ações">
-  <div class="actions">
-    ${btnPdf}
-    ${btnAprovar}
-    ${btnExcluir}
-  </div>
-</td>
+          <div class="actions">
+            ${btnPdf}
+            ${btnAprovar}
+            ${btnExcluir}
+          </div>
+        </td>
       </tr>`;
   });
 }
@@ -726,7 +715,7 @@ function aplicarFiltros() {
   const eqpSel  = document.getElementById("filtroEquipamento").value;
   const aprov   = document.getElementById("filtroAprovacao").value;
   const geral   = (document.getElementById("buscaGeral").value || "").toLowerCase();
-  const dataFiltro = document.getElementById("filtroData").value; // YYYY-MM-DD
+  const dataFiltro = document.getElementById("filtroData").value;
 
   const filtrados = ensaiosOriginais.filter(e => {
     let dataEnsaio = "";
@@ -747,7 +736,6 @@ function aplicarFiltros() {
       (aprov === "ap" && !!e.aprovacao);
 
     const okData = (dataFiltro === "" || dataEnsaio === dataFiltro);
-
     const okGeral = !geral || JSON.stringify(e).toLowerCase().includes(geral);
 
     return okNome && okEqp && okAprov && okData && okGeral;
@@ -827,6 +815,7 @@ async function excluirEnsaio(id){
 ============================================================ */
 async function gerarPDF(eEncoded) {
   const e = JSON.parse(decodeURIComponent(eEncoded));
+
   if (!e.aprovacao) {
     alert("Este ensaio não possui número de certificação. O laudo não pode ser gerado.");
     return;
@@ -895,6 +884,7 @@ async function gerarPDF(eEncoded) {
   if (imagemEquip) {
     const imgX = 145, imgW = 45, imgH = 45;
     await addImage(imagemEquip, imgX, inicioBlocoY, imgW, imgH);
+
     doc.setFont("Helvetica", "italic");
     doc.setFontSize(7);
     doc.text("*Imagem meramente ilustrativa", imgX + imgW / 2, inicioBlocoY + imgH + 5, { align: "center" });
