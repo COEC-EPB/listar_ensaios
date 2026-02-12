@@ -243,13 +243,20 @@
   tr:hover td{ background: #f6fbff; }
 
   /* Botões de ação mais “bonitos” e alinhados */
-  .actions-cell{ padding-top: 10px; padding-bottom: 10px; }
-  /* AÇÕES - alinhamento perfeito */
-.actions{
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  .actions-cell{
+  display: flex;
+  flex-direction: column;   /* empilha */
   gap: 8px;
   align-items: stretch;
+  min-width: 140px;         /* evita esmagar demais */
+}
+
+.actions-cell .btn{
+  width: 100%;
+  justify-content: center;
+  white-space: nowrap;      /* não quebra texto */
+  line-height: 1;
+  padding: 10px 12px;
 }
   .btn-mini{
   width: 100%;
@@ -295,10 +302,9 @@
 
   /* RESPONSIVO MELHOR: filtros e header */
  /* no mobile: 1 por linha */
-@media (max-width: 820px){
-  .actions{
-    grid-template-columns: 1fr;
-  }
+@media (max-width: 520px){
+  .actions-cell{ min-width: 120px; }
+  .actions-cell .btn{ font-size: 13px; padding: 9px 10px; }
 }
   @media (max-width: 520px){
     body{ padding: 10px; }
@@ -449,7 +455,7 @@
               <th style="width:30%;">Equipamentos</th>
               <th style="width:10%;">Resultado</th>
               <th style="width:10%;">Certificado nº</th>
-              <th style="width:16%;">Ações</th>
+              <th style="width:170px; white-space:nowrap;">Ações</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -673,16 +679,15 @@ function renderizar(lista) {
   tbody.innerHTML = "";
 
   lista.forEach(e => {
-    const btnPdf = e.aprovacao
-  ? `<button class="btn btn-primary btn-mini" onclick='gerarPDF("${encodeURIComponent(JSON.stringify(e))}")'><i class="bi bi-filetype-pdf"></i> PDF</button>`
-  : `<button class="btn btn-primary btn-mini" onclick='alert("Este ensaio não possui número de certificação. O laudo não pode ser gerado.")'><i class="bi bi-filetype-pdf"></i> PDF</button>`;
+    const btnPdf = `<button class="btn btn-primary" onclick='gerarPDF("${encodeURIComponent(JSON.stringify(e))}")'>
+  <i class="bi bi-filetype-pdf"></i> PDF
+</button>`;
 
-    const btnAprovar = e.aprovacao
-  ? `<button class="btn btn-ghost btn-mini" disabled><i class="bi bi-check2-circle"></i> Aprovado</button>`
-  : `<button class="btn btn-warning btn-mini" onclick="abrirModal(${e.id})"><i class="bi bi-check2"></i> Aprovar</button>`;
+const btnAprovar = e.aprovacao
+  ? `<button class="btn btn-ghost" disabled><i class="bi bi-check2-circle"></i> Aprovado</button>`
+  : `<button class="btn btn-warning" onclick="abrirModal(${e.id})"><i class="bi bi-check2"></i> Aprovar</button>`;
 
-const btnExcluir =
-  `<button class="btn btn-danger btn-mini" onclick="excluirEnsaio(${e.id})"><i class="bi bi-trash3"></i> Excluir</button>`;
+const btnExcluir = `<button class="btn btn-danger" onclick="excluirEnsaio(${e.id})"><i class="bi bi-trash3"></i> Excluir</button>`;
 
     tbody.innerHTML += `
       <tr>
