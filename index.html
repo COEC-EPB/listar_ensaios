@@ -5,10 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ensaios Dielétricos - Consulta</title>
 
-<!-- Ícones -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
-<!-- jsPDF + AutoTable -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
@@ -36,7 +34,7 @@
       radial-gradient(1200px 600px at 10% 0%, rgba(0,151,206,.18), transparent 55%),
       radial-gradient(1000px 520px at 90% 15%, rgba(0,151,206,.10), transparent 60%),
       var(--bg);
-    padding: 20px;
+    padding: 16px;
     color: var(--text);
   }
 
@@ -45,7 +43,7 @@
     align-items:center;
     justify-content:center;
     gap:10px;
-    margin: 10px 0 16px 0;
+    margin: 8px 0 14px 0;
     color: var(--primary);
     font-weight: 900;
   }
@@ -57,11 +55,7 @@
     font-size: 20px;
   }
 
-  /* LOGIN */
-  #loginView{
-    width: min(460px, 100%);
-    margin: 0 auto;
-  }
+  #loginView{ width: min(460px, 100%); margin: 0 auto; }
 
   .card{
     max-width: 1400px;
@@ -75,13 +69,14 @@
   }
 
   .card-header{
-    padding: 18px 18px 10px 18px;
+    padding: 14px 14px 12px 14px;
     border-bottom: 1px solid rgba(229,231,235,.9);
     background: linear-gradient(90deg, rgba(0,151,206,.10), rgba(0,151,206,.03));
     display:flex;
     align-items:center;
     justify-content:space-between;
-    gap: 12px;
+    gap: 10px;
+    flex-wrap: wrap;
   }
 
   .title{
@@ -90,6 +85,7 @@
     gap:10px;
     font-weight: 950;
     color: #003d66;
+    flex-wrap: wrap;
   }
 
   .badge{
@@ -102,25 +98,15 @@
     font-weight: 900;
   }
 
-  .content{
-    padding: 16px 18px 18px 18px;
-  }
+  .content{ padding: 14px; }
 
-  h2{
-    margin:0;
-    font-size: 18px;
-    color: #003d66;
-  }
-  .sub{
-    margin: 8px 0 0 0;
-    font-size: 13px;
-    color: var(--muted);
-  }
+  h2{ margin:0; font-size: 18px; color: #003d66; }
+  .sub{ margin: 8px 0 0 0; font-size: 13px; color: var(--muted); }
 
   .grid-login{
     display:grid;
     gap: 12px;
-    padding: 16px 18px 18px 18px;
+    padding: 14px;
   }
 
   label{
@@ -145,6 +131,7 @@
     outline: none;
     background: #fff;
   }
+  select{ padding-left: 12px; }
   input:focus, select:focus{
     border-color: rgba(0,151,206,.6);
     box-shadow: 0 0 0 4px rgba(0,151,206,.16);
@@ -171,6 +158,8 @@
     align-items:center;
     justify-content:center;
     gap: 8px;
+    user-select:none;
+    white-space: nowrap;
   }
   .btn-primary{ background: var(--primary); color:#fff; }
   .btn-primary:hover{ background: var(--primary-dark); }
@@ -180,17 +169,17 @@
   .btn-warning:hover{ filter: brightness(.95); }
   .btn-ghost{ background: #f3f4f6; color:#111827; border:1px solid #e5e7eb; }
   .btn-ghost:hover{ background:#e5e7eb; }
+  .btn:active{ transform: translateY(1px); }
 
   .row-actions{
     display:flex;
-    align-items:center;
-    justify-content: space-between;
     gap: 10px;
+    flex-wrap: wrap;
   }
 
   .erro{
     display:none;
-    margin: 0 18px 18px 18px;
+    margin: 0 14px 14px 14px;
     padding: 10px 12px;
     border-radius: 12px;
     border: 1px solid rgba(220,53,69,.25);
@@ -200,12 +189,12 @@
     line-height: 1.35;
   }
 
-  /* VIEW */
   #appView{ display:none; }
 
+  /* FILTROS: agora com selects */
   .filtros{
     display:grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: 1.2fr 1.2fr .9fr 1fr 1.4fr;
     gap: 10px;
     margin-bottom: 12px;
   }
@@ -253,10 +242,18 @@
 
   tr:hover td{ background: #f6fbff; }
 
-  .actions-cell{
+  /* Botões de ação mais “bonitos” e alinhados */
+  .actions-cell{ padding-top: 10px; padding-bottom: 10px; }
+  .actions{
     display:flex;
     gap: 8px;
     flex-wrap: wrap;
+    align-items:center;
+  }
+  .btn-mini{
+    padding: 9px 12px;
+    border-radius: 999px;
+    font-size: 13px;
   }
 
   /* MODAL */
@@ -274,30 +271,65 @@
   }
   .modal-content{
     background:white;
-    padding: 18px;
+    padding: 16px;
     border-radius: 14px;
-    width: min(380px, 100%);
+    width: min(420px, 100%);
     text-align:left;
     box-shadow:0 20px 60px rgba(0,0,0,.25);
     border: 1px solid rgba(229,231,235,.9);
   }
   .modal-content h3{ margin:0 0 10px 0; }
-  .modal-content input{
-    padding-left: 12px;
-  }
+  .modal-content input{ padding-left: 12px; }
   .modal-actions{
     display:flex;
     gap: 10px;
     justify-content:flex-end;
     margin-top: 12px;
+    flex-wrap: wrap;
   }
 
+  /* RESPONSIVO MELHOR: filtros e header */
   @media (max-width: 980px){
     .filtros{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (max-width: 520px){
-    body{ padding: 12px; }
+    body{ padding: 10px; }
     .filtros{ grid-template-columns: 1fr; }
+    .card-header{ padding: 12px; }
+    .content{ padding: 12px; }
+  }
+
+  /* ✅ Modo celular: tabela vira cards (muito mais usável) */
+  @media (max-width: 820px){
+    .table-wrap{ border: none; overflow: visible; }
+    table{ min-width: 0; }
+    thead{ display:none; }
+    tr{
+      display:block;
+      background:#fff;
+      border:1px solid rgba(229,231,235,.9);
+      border-radius: 14px;
+      margin-bottom: 10px;
+      box-shadow: 0 10px 26px rgba(0,0,0,.07);
+      overflow:hidden;
+    }
+    td{
+      display:flex;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid #eef2f6;
+      padding: 10px 12px;
+      font-size: 14px;
+    }
+    td::before{
+      content: attr(data-label);
+      font-weight: 900;
+      color: #0f172a;
+      min-width: 42%;
+    }
+    td.actions-cell{ display:block; }
+    td.actions-cell::before{ display:none; }
+    .actions{ padding: 10px 12px 12px 12px; }
   }
 </style>
 </head>
@@ -371,16 +403,24 @@
 
     <div class="content">
 
-      <!-- FILTROS -->
+      <!-- FILTROS (selects dinâmicos) -->
       <div class="filtros">
-        <input id="filtroNome" placeholder="Filtrar por nome">
-        <input id="filtroEquipamento" placeholder="Filtrar por equipamento">
+        <select id="filtroNome">
+          <option value="">Nome (todos)</option>
+        </select>
+
+        <select id="filtroEquipamento">
+          <option value="">Equipamento (todos)</option>
+        </select>
+
         <input id="filtroData" type="date">
+
         <select id="filtroAprovacao">
           <option value="">Aprovação (todos)</option>
           <option value="-">Sem aprovação</option>
           <option value="ap">Aprovados</option>
         </select>
+
         <input id="buscaGeral" placeholder="Busca inteligente (tudo)">
       </div>
 
@@ -512,21 +552,16 @@ function formatarData(data) {
 }
 
 /* ============================================================
-   NORMALIZAR TEXTO (sem acentos, UPPERCASE)
+   NORMALIZAR TEXTO
 ============================================================ */
 let proximoNumeroAprovacao = "";
-
 function normalizar(str) {
   if (!str) return "";
-  return str
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toUpperCase()
-    .trim();
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
 }
 
 /* ============================================================
-   CARREGAR IMAGENS DO GITHUB
+   IMAGENS GITHUB
 ============================================================ */
 const GITHUB_API = "https://api.github.com/repos/COEC-EPB/listar_ensaios/contents/";
 const GITHUB_RAW = "https://raw.githubusercontent.com/COEC-EPB/listar_ensaios/main/";
@@ -536,10 +571,8 @@ async function carregarImagensGitHub() {
   try {
     const r = await fetch(GITHUB_API);
     const arquivos = await r.json();
-
     arquivos.forEach(arq => {
       if (!arq.name.match(/\.(png|jpg|jpeg|jfif|tif)$/i)) return;
-
       let nomeOriginal = arq.name.replace(/\.(png|jpg|jpeg|jfif|tif)$/i, "");
       let chave = normalizar(nomeOriginal);
       mapaImagens[chave] = GITHUB_RAW + encodeURIComponent(arq.name);
@@ -548,7 +581,6 @@ async function carregarImagensGitHub() {
     console.error("Erro ao carregar imagens:", err);
   }
 }
-
 function getImagemEquipamento(equipamento) {
   return mapaImagens[normalizar(equipamento)] || null;
 }
@@ -560,10 +592,7 @@ let ensaiosOriginais = [];
 
 async function carregar() {
   const token = localStorage.getItem("token");
-  if(!token){
-    showLogin();
-    return;
-  }
+  if(!token){ showLogin(); return; }
 
   const r = await fetch(`${API}/listar-ensaios`, {
     headers: { "Authorization": "Bearer " + token }
@@ -579,19 +608,44 @@ async function carregar() {
 
   ensaiosOriginais = j;
 
-  // PEGAR O ÚLTIMO NÚMERO DE APROVAÇÃO
+  // Popular selects (nome/equipamento)
+  popularFiltrosPorLista(ensaiosOriginais);
+
+  // Próximo número de aprovação
   const anoAtual = new Date().getFullYear();
   const numeros = ensaiosOriginais
-    .filter(e => e.aprovacao && e.aprovacao.includes("/"))
-    .map(e => Number(e.aprovacao.split("/")[0]));
+    .filter(e => e.aprovacao && String(e.aprovacao).includes("/"))
+    .map(e => Number(String(e.aprovacao).split("/")[0]));
 
-  let ultimo = 0;
-  if (numeros.length > 0) ultimo = Math.max(...numeros);
-
-  const seq = String(ultimo + 1).padStart(5, "0");
-  proximoNumeroAprovacao = `${seq}/${anoAtual}`;
+  const ultimo = numeros.length ? Math.max(...numeros) : 0;
+  proximoNumeroAprovacao = `${String(ultimo + 1).padStart(5, "0")}/${anoAtual}`;
 
   renderizar(ensaiosOriginais);
+}
+
+function popularFiltrosPorLista(lista){
+  const selNome = document.getElementById("filtroNome");
+  const selEqp  = document.getElementById("filtroEquipamento");
+
+  const nomeAtual = selNome.value;
+  const eqpAtual  = selEqp.value;
+
+  const nomes = [...new Set(lista.map(e => (e.nome || "").trim()).filter(Boolean))]
+    .sort((a,b) => a.localeCompare(b, "pt-BR", { sensitivity: "base" }));
+
+  const equipamentos = [...new Set(lista.map(e => (e.equipamentos || "").trim()).filter(Boolean))]
+    .sort((a,b) => a.localeCompare(b, "pt-BR", { sensitivity: "base" }));
+
+  // reset mantendo o primeiro option
+  selNome.innerHTML = `<option value="">Nome (todos)</option>` +
+    nomes.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join("");
+
+  selEqp.innerHTML = `<option value="">Equipamento (todos)</option>` +
+    equipamentos.map(x => `<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join("");
+
+  // tenta restaurar seleções
+  selNome.value = nomeAtual;
+  selEqp.value = eqpAtual;
 }
 
 function renderizar(lista) {
@@ -599,44 +653,56 @@ function renderizar(lista) {
   tbody.innerHTML = "";
 
   lista.forEach(e => {
-
     const btnPdf = e.aprovacao
-      ? `<button class="btn btn-primary" onclick='gerarPDF("${encodeURIComponent(JSON.stringify(e))}")'><i class="bi bi-filetype-pdf"></i> PDF</button>`
-      : `<button class="btn btn-primary" onclick='alert("Este ensaio não possui número de certificação. O laudo não pode ser gerado.")'><i class="bi bi-filetype-pdf"></i> PDF</button>`;
+      ? `<button class="btn btn-primary btn-mini" onclick='gerarPDF("${encodeURIComponent(JSON.stringify(e))}")'><i class="bi bi-filetype-pdf"></i> PDF</button>`
+      : `<button class="btn btn-primary btn-mini" onclick='alert("Este ensaio não possui número de certificação. O laudo não pode ser gerado.")'><i class="bi bi-filetype-pdf"></i> PDF</button>`;
 
     const btnAprovar = e.aprovacao
-      ? `<button class="btn btn-ghost" disabled><i class="bi bi-check2-circle"></i> Aprovado</button>`
-      : `<button class="btn btn-warning" onclick="abrirModal(${e.id})"><i class="bi bi-check2"></i> Aprovar</button>`;
+      ? `<button class="btn btn-ghost btn-mini" disabled><i class="bi bi-check2-circle"></i> Aprovado</button>`
+      : `<button class="btn btn-warning btn-mini" onclick="abrirModal(${e.id})"><i class="bi bi-check2"></i> Aprovar</button>`;
 
-    const btnExcluir = `<button class="btn btn-danger" onclick="excluirEnsaio(${e.id})"><i class="bi bi-trash3"></i> Excluir</button>`;
+    const btnExcluir = `<button class="btn btn-danger btn-mini" onclick="excluirEnsaio(${e.id})"><i class="bi bi-trash3"></i> Excluir</button>`;
 
     tbody.innerHTML += `
       <tr>
-        <td>${e.id}</td>
-        <td>${formatarData(e.data)}</td>
-        <td>${e.regional || "-"}</td>
-        <td>${e.nome || "-"}</td>
-        <td>${e.equipamentos || "-"}</td>
-        <td>${e.resultado || "-"}</td>
-        <td>${e.aprovacao ?? "-"}</td>
-        <td class="actions-cell">${btnPdf} ${btnAprovar} ${btnExcluir}</td>
+        <td data-label="ID">${e.id}</td>
+        <td data-label="Data">${formatarData(e.data)}</td>
+        <td data-label="Regional">${e.regional || "-"}</td>
+        <td data-label="Nome">${e.nome || "-"}</td>
+        <td data-label="Equipamentos">${e.equipamentos || "-"}</td>
+        <td data-label="Resultado">${e.resultado || "-"}</td>
+        <td data-label="Certificado nº">${e.aprovacao ?? "-"}</td>
+        <td class="actions-cell" data-label="Ações">
+          <div class="actions">
+            ${btnPdf}
+            ${btnAprovar}
+            ${btnExcluir}
+          </div>
+        </td>
       </tr>`;
   });
+}
+
+function escapeHtml(s){
+  return String(s)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 }
 
 /* ============================================================
    FILTROS
 ============================================================ */
 function aplicarFiltros() {
-  let nome = (filtroNome.value || "").toLowerCase();
-  let eqp = (filtroEquipamento.value || "").toLowerCase();
-  let aprov = filtroAprovacao.value;
-  let geral = (buscaGeral.value || "").toLowerCase();
-  let dataFiltro = filtroData.value; // YYYY-MM-DD
+  const nomeSel = document.getElementById("filtroNome").value;
+  const eqpSel  = document.getElementById("filtroEquipamento").value;
+  const aprov   = document.getElementById("filtroAprovacao").value;
+  const geral   = (document.getElementById("buscaGeral").value || "").toLowerCase();
+  const dataFiltro = document.getElementById("filtroData").value; // YYYY-MM-DD
 
-  let filtrados = ensaiosOriginais.filter(e => {
-
-    // Data do ensaio (YYYY-MM-DD)
+  const filtrados = ensaiosOriginais.filter(e => {
     let dataEnsaio = "";
     if (e.data) {
       const d = new Date(e.data);
@@ -646,15 +712,19 @@ function aplicarFiltros() {
       dataEnsaio = `${ano}-${mes}-${dia}`;
     }
 
-    return (
-      String(e.nome || "").toLowerCase().includes(nome) &&
-      String(e.equipamentos || "").toLowerCase().includes(eqp) &&
-      (aprov === "" ||
-        (aprov === "-" && !e.aprovacao) ||
-        (aprov === "ap" && !!e.aprovacao)) &&
-      (dataFiltro === "" || dataEnsaio === dataFiltro) &&
-      (geral === "" || JSON.stringify(e).toLowerCase().includes(geral))
-    );
+    const okNome = !nomeSel || (e.nome || "").trim() === nomeSel;
+    const okEqp  = !eqpSel  || (e.equipamentos || "").trim() === eqpSel;
+
+    const okAprov =
+      aprov === "" ||
+      (aprov === "-" && !e.aprovacao) ||
+      (aprov === "ap" && !!e.aprovacao);
+
+    const okData = (dataFiltro === "" || dataEnsaio === dataFiltro);
+
+    const okGeral = !geral || JSON.stringify(e).toLowerCase().includes(geral);
+
+    return okNome && okEqp && okAprov && okData && okGeral;
   });
 
   renderizar(filtrados);
@@ -672,25 +742,18 @@ let ensaioSelecionado = null;
 function abrirModal(id) {
   ensaioSelecionado = id;
   document.getElementById("numeroAprovacao").value = proximoNumeroAprovacao;
-  modal.style.display = "flex";
+  document.getElementById("modal").style.display = "flex";
 }
 function fecharModal() {
-  modal.style.display = "none";
+  document.getElementById("modal").style.display = "none";
 }
 
 async function salvarAprovacao() {
   const aprov = numeroAprovacao.value.trim();
-  if (!aprov) {
-    alert("Digite o número de aprovação.");
-    return;
-  }
+  if (!aprov) { alert("Digite o número de aprovação."); return; }
 
   const token = localStorage.getItem("token");
-  if(!token){
-    alert("Sessão expirada.");
-    logout();
-    return;
-  }
+  if(!token){ alert("Sessão expirada."); logout(); return; }
 
   const r = await fetch(`${API}/salvar-aprovacao`, {
     method: "POST",
@@ -702,10 +765,7 @@ async function salvarAprovacao() {
   });
 
   const j = await r.json().catch(() => ({}));
-  if(!r.ok){
-    alert(j.error || "Erro ao salvar aprovação.");
-    return;
-  }
+  if(!r.ok){ alert(j.error || "Erro ao salvar aprovação."); return; }
 
   fecharModal();
   carregar();
@@ -719,11 +779,7 @@ async function excluirEnsaio(id){
   if(!ok) return;
 
   const token = localStorage.getItem("token");
-  if(!token){
-    alert("Sessão expirada.");
-    logout();
-    return;
-  }
+  if(!token){ alert("Sessão expirada."); logout(); return; }
 
   const r = await fetch(`${API}/excluir-ensaio?id=${id}`, {
     method: "DELETE",
@@ -741,12 +797,10 @@ async function excluirEnsaio(id){
 }
 
 /* ============================================================
-   GERAR PDF (seu layout original)
+   GERAR PDF (mantido)
 ============================================================ */
 async function gerarPDF(eEncoded) {
-
   const e = JSON.parse(decodeURIComponent(eEncoded));
-
   if (!e.aprovacao) {
     alert("Este ensaio não possui número de certificação. O laudo não pode ser gerado.");
     return;
@@ -773,18 +827,13 @@ async function gerarPDF(eEncoded) {
       const reader = new FileReader();
       reader.onload = () => {
         const ext = path.split(".").pop().toUpperCase();
-        doc.addImage(
-          reader.result,
-          ext === "PNG" ? "PNG" : "JPEG",
-          x, y, w, h
-        );
+        doc.addImage(reader.result, ext === "PNG" ? "PNG" : "JPEG", x, y, w, h);
         resolve();
       };
       reader.readAsDataURL(blob);
     });
   }
 
-  // Cabeçalho
   if (mapaImagens["ENERGISA"]) {
     await addImage(mapaImagens["ENERGISA"], 14, 8, 30, 18);
   }
@@ -794,7 +843,6 @@ async function gerarPDF(eEncoded) {
   doc.text("LAUDO DE ENSAIO DIELÉTRICO", pageWidth / 2, 16, { align: "center" });
 
   let y = 30;
-
   const inicioBlocoY = y;
 
   doc.autoTable({
@@ -819,16 +867,11 @@ async function gerarPDF(eEncoded) {
   const imagemEquip = getImagemEquipamento(e.equipamentos);
 
   if (imagemEquip) {
-    const imgX = 145;
-    const imgW = 45;
-    const imgH = 45;
-
+    const imgX = 145, imgW = 45, imgH = 45;
     await addImage(imagemEquip, imgX, inicioBlocoY, imgW, imgH);
-
     doc.setFont("Helvetica", "italic");
     doc.setFontSize(7);
     doc.text("*Imagem meramente ilustrativa", imgX + imgW / 2, inicioBlocoY + imgH + 5, { align: "center" });
-
     imgFimY = inicioBlocoY + imgH + 10;
   }
 
@@ -886,18 +929,12 @@ async function gerarPDF(eEncoded) {
   ];
 
   obs.forEach(l => {
-    if (y > pageHeight - 30) {
-      doc.addPage();
-      y = 20;
-    }
+    if (y > pageHeight - 30) { doc.addPage(); y = 20; }
     doc.text(l, 14, y);
     y += 5;
   });
 
-  if (y > pageHeight - 40) {
-    doc.addPage();
-    y = 30;
-  }
+  if (y > pageHeight - 40) { doc.addPage(); y = 30; }
 
   doc.text("__________________________________________", pageWidth / 2, y, { align: "center" });
   y += 6;
