@@ -810,6 +810,38 @@ async function excluirEnsaio(id){
   carregar();
 }
 
+  function inicialRegional(regional){
+  const r = normalizar(regional || "");
+  // ajusta aqui se você usa outros textos (ex: "REGIONAL LESTE", etc.)
+  if (r.includes("LESTE")) return "L";
+  if (r.includes("CENTRO")) return "C";
+  if (r.includes("OESTE")) return "O";
+  return "X"; // caso não reconheça
+}
+
+function limparNomeArquivo(s){
+  return String(s || "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove acentos
+    .replace(/[\\/:*?"<>|]/g, "-")                   // caracteres proibidos
+    .replace(/\s+/g, "_")                             // espaços -> _
+    .trim();
+}
+
+function montarNomeLaudo(e){
+  // numero do laudo e ano vêm da aprovação (ex: 00001/2026)
+  const aprov = String(e.aprovacao || "");
+  const partes = aprov.split("/");
+  const numeroLaudo = (partes[0] || "").trim() || String(e.id || "").trim();
+  const ano = (partes[1] || "").trim() || String(new Date(e.data || Date.now()).getFullYear());
+
+  const ini = inicialRegional(e.regional);
+  const equipamento = limparNomeArquivo(e.equipamentos || "EQUIPAMENTO");
+
+  // Formato: Inicial + ano + numero do laudo + equipamento
+  // Ex: L202600001LUVA
+  return `${ini}${ano}${numeroLaudo}${equipamento}`;
+}
+
 /* ============================================================
    GERAR PDF (mantido)
 ============================================================ */
@@ -962,7 +994,8 @@ async function gerarPDF(eEncoded) {
   doc.setFont("Helvetica", "normal");
   doc.text("Responsável Técnico – CREA-PB: 1605187852", pageWidth / 2, y, { align: "center" });
 
-  doc.save(`laudo_${e.id}.pdf`);
+  const nomeArquivo = montarNomeLaudo(e);
+  doc.save(`${nomeArquivo}.pdf`);
 }
 
 /* ============================================================
