@@ -404,9 +404,15 @@
         <span>Ensaios Dielétricos Registrados</span>
         <span class="badge" id="badgeUser">logado</span>
       </div>
-      <button class="btn btn-danger" onclick="logout()">
-        <i class="bi bi-box-arrow-right"></i> Sair
-      </button>
+      <div style="display:flex; gap:10px; align-items:center;">
+  <a class="btn btn-ghost" href="https://coec-epb.github.io/ensaio_dieletrico/">
+    <i class="bi bi-arrow-left"></i> Voltar
+  </a>
+
+  <button class="btn btn-danger" onclick="logout()">
+    <i class="bi bi-box-arrow-right"></i> Sair
+  </button>
+</div>
     </div>
 
     <div class="content">
@@ -497,6 +503,7 @@ function showApp(){
   document.getElementById("loginView").style.display = "none";
   document.getElementById("appView").style.display = "block";
 }
+  
 
 /* ============================================================
    LOGIN
@@ -548,6 +555,11 @@ function logout(){
   localStorage.removeItem("token");
   localStorage.removeItem("matricula");
   location.reload();
+}
+  function logout(){
+  localStorage.removeItem("token");
+  localStorage.removeItem("matricula");
+  window.location.href = "https://coec-epb.github.io/ensaio_dieletrico/";
 }
 
 /* ============================================================
