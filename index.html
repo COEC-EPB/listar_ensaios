@@ -485,37 +485,7 @@
         </table>
       </div>
 
-      <div class="paginacao" id="paginacaoTopo">
-  <button class="btn btn-ghost" id="btnPrimeiraTopo" type="button">
-    <i class="bi bi-chevron-double-left"></i>
-    Primeira
-  </button>
-
-  <button class="btn btn-ghost" id="btnAnteriorTopo" type="button">
-    <i class="bi bi-chevron-left"></i>
-    Anterior
-  </button>
-
-  <div class="pagina-info" id="paginaInfoTopo">Página 1 de 1</div>
-
-  <button class="btn btn-ghost" id="btnProximaTopo" type="button">
-    Próxima
-    <i class="bi bi-chevron-right"></i>
-  </button>
-
-  <button class="btn btn-ghost" id="btnUltimaTopo" type="button">
-    Última
-    <i class="bi bi-chevron-double-right"></i>
-  </button>
-</div>
-
-<div class="table-wrap">
-  <table id="tabela">
-    ...
-  </table>
-</div>
-
-<div class="paginacao" id="paginacao">
+      <div class="paginacao" id="paginacao">
   <button class="btn btn-ghost" id="btnPrimeira" type="button">
     <i class="bi bi-chevron-double-left"></i>
     Primeira
@@ -809,38 +779,21 @@ function renderizar(lista) {
   function atualizarControlesPaginacao() {
   const total = ensaiosFiltrados.length;
   const totalPaginas = Math.max(1, Math.ceil(total / ITENS_POR_PAGINA));
-  const texto = `Página ${paginaAtual} de ${totalPaginas} • ${total} registro(s)`;
 
-  const idsInfo = ["paginaInfo", "paginaInfoTopo"];
-  const idsPrimeira = ["btnPrimeira", "btnPrimeiraTopo"];
-  const idsAnterior = ["btnAnterior", "btnAnteriorTopo"];
-  const idsProxima = ["btnProxima", "btnProximaTopo"];
-  const idsUltima = ["btnUltima", "btnUltimaTopo"];
+  const paginaInfo = document.getElementById("paginaInfo");
+  const btnPrimeira = document.getElementById("btnPrimeira");
+  const btnAnterior = document.getElementById("btnAnterior");
+  const btnProxima = document.getElementById("btnProxima");
+  const btnUltima = document.getElementById("btnUltima");
 
-  idsInfo.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = texto;
-  });
+  if (paginaInfo) {
+    paginaInfo.textContent = `Página ${paginaAtual} de ${totalPaginas} • ${total} registro(s)`;
+  }
 
-  idsPrimeira.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.disabled = paginaAtual <= 1;
-  });
-
-  idsAnterior.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.disabled = paginaAtual <= 1;
-  });
-
-  idsProxima.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.disabled = paginaAtual >= totalPaginas;
-  });
-
-  idsUltima.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.disabled = paginaAtual >= totalPaginas;
-  });
+  if (btnPrimeira) btnPrimeira.disabled = paginaAtual <= 1;
+  if (btnAnterior) btnAnterior.disabled = paginaAtual <= 1;
+  if (btnProxima) btnProxima.disabled = paginaAtual >= totalPaginas;
+  if (btnUltima) btnUltima.disabled = paginaAtual >= totalPaginas;
 }
 
 function escapeHtml(s){
