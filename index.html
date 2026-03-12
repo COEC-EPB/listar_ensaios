@@ -341,6 +341,32 @@
     td.actions-cell{ display:block; }
     td.actions-cell::before{ display:none; }
   }
+  .paginacao{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:14px;
+  padding-top:8px;
+}
+
+.pagina-info{
+  font-size:14px;
+  font-weight:900;
+  color:#374151;
+  padding:10px 14px;
+  border-radius:12px;
+  background:#f8fafc;
+  border:1px solid #e5e7eb;
+  min-width:140px;
+  text-align:center;
+}
+
+.btn[disabled]{
+  opacity:.5;
+  cursor:not-allowed;
+}
 </style>
 </head>
 
@@ -458,6 +484,30 @@
           <tbody></tbody>
         </table>
       </div>
+
+      <div class="paginacao" id="paginacao">
+  <button class="btn btn-ghost" id="btnPrimeira" type="button">
+    <i class="bi bi-chevron-double-left"></i>
+    Primeira
+  </button>
+
+  <button class="btn btn-ghost" id="btnAnterior" type="button">
+    <i class="bi bi-chevron-left"></i>
+    Anterior
+  </button>
+
+  <div class="pagina-info" id="paginaInfo">Página 1 de 1</div>
+
+  <button class="btn btn-ghost" id="btnProxima" type="button">
+    Próxima
+    <i class="bi bi-chevron-right"></i>
+  </button>
+
+  <button class="btn btn-ghost" id="btnUltima" type="button">
+    Última
+    <i class="bi bi-chevron-double-right"></i>
+  </button>
+</div>
 
     </div>
   </div>
@@ -606,6 +656,10 @@ function getImagemEquipamento(equipamento) {
    LISTAGEM
 ============================================================ */
 let ensaiosOriginais = [];
+let ensaiosFiltrados = [];
+
+const ITENS_POR_PAGINA = 100;
+let paginaAtual = 1;
 
 async function carregar() {
   const token = localStorage.getItem("token");
@@ -635,7 +689,8 @@ async function carregar() {
   const ultimo = numeros.length ? Math.max(...numeros) : 0;
   proximoNumeroAprovacao = `${String(ultimo + 1).padStart(5, "0")}/${anoAtual}`;
 
-  renderizar(ensaiosOriginais);
+  paginaAtual = 1;
+renderizar(ensaiosOriginais);
 }
 
 function popularFiltrosPorLista(lista){
@@ -662,10 +717,32 @@ function popularFiltrosPorLista(lista){
 }
 
 function renderizar(lista) {
+  ensaiosFiltrados = Array.isArray(lista) ? lista : [];
+  const totalPaginas = Math.max(1, Math.ceil(ensaiosFiltrados.length / ITENS_POR_PAGINA));
+
+  if (paginaAtual > totalPaginas) paginaAtual = totalPaginas;
+  if (paginaAtual < 1) paginaAtual = 1;
+
+  const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
+  const fim = inicio + ITENS_POR_PAGINA;
+  const pagina = ensaiosFiltrados.slice(inicio, fim);
+
   const tbody = document.querySelector("#tabela tbody");
   tbody.innerHTML = "";
 
-  lista.forEach(e => {
+  if (!pagina.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" style="text-align:center; padding:20px; font-weight:700; color:#6b7280;">
+          Nenhum registro encontrado.
+        </td>
+      </tr>
+    `;
+    atualizarControlesPaginacao();
+    return;
+  }
+
+  pagina.forEach(e => {
     const btnPdf = `<button class="btn btn-primary" onclick='gerarPDF("${encodeURIComponent(JSON.stringify(e))}")'>
       <i class="bi bi-filetype-pdf"></i> PDF
     </button>`;
@@ -696,6 +773,27 @@ function renderizar(lista) {
         </td>
       </tr>`;
   });
+
+  atualizarControlesPaginacao();
+}
+  function atualizarControlesPaginacao() {
+  const total = ensaiosFiltrados.length;
+  const totalPaginas = Math.max(1, Math.ceil(total / ITENS_POR_PAGINA));
+
+  const paginaInfo = document.getElementById("paginaInfo");
+  const btnPrimeira = document.getElementById("btnPrimeira");
+  const btnAnterior = document.getElementById("btnAnterior");
+  const btnProxima = document.getElementById("btnProxima");
+  const btnUltima = document.getElementById("btnUltima");
+
+  if (paginaInfo) {
+    paginaInfo.textContent = `Página ${paginaAtual} de ${totalPaginas} • ${total} registro(s)`;
+  }
+
+  if (btnPrimeira) btnPrimeira.disabled = paginaAtual <= 1;
+  if (btnAnterior) btnAnterior.disabled = paginaAtual <= 1;
+  if (btnProxima) btnProxima.disabled = paginaAtual >= totalPaginas;
+  if (btnUltima) btnUltima.disabled = paginaAtual >= totalPaginas;
 }
 
 function escapeHtml(s){
@@ -741,12 +839,40 @@ function aplicarFiltros() {
     return okNome && okEqp && okAprov && okData && okGeral;
   });
 
+  paginaAtual = 1;
   renderizar(filtrados);
 }
 
-document.querySelectorAll(
-  "#filtroNome,#filtroEquipamento,#filtroAprovacao,#buscaGeral,#filtroData"
-).forEach(el => el.addEventListener("input", aplicarFiltros));
+  document.getElementById("btnPrimeira")?.addEventListener("click", () => {
+  paginaAtual = 1;
+  renderizar(ensaiosFiltrados);
+});
+
+document.getElementById("btnAnterior")?.addEventListener("click", () => {
+  if (paginaAtual > 1) {
+    paginaAtual--;
+    renderizar(ensaiosFiltrados);
+  }
+});
+
+document.getElementById("btnProxima")?.addEventListener("click", () => {
+  const totalPaginas = Math.max(1, Math.ceil(ensaiosFiltrados.length / ITENS_POR_PAGINA));
+  if (paginaAtual < totalPaginas) {
+    paginaAtual++;
+    renderizar(ensaiosFiltrados);
+  }
+});
+
+document.getElementById("btnUltima")?.addEventListener("click", () => {
+  paginaAtual = Math.max(1, Math.ceil(ensaiosFiltrados.length / ITENS_POR_PAGINA));
+  renderizar(ensaiosFiltrados);
+});
+
+document.getElementById("filtroNome").addEventListener("change", aplicarFiltros);
+document.getElementById("filtroEquipamento").addEventListener("change", aplicarFiltros);
+document.getElementById("filtroAprovacao").addEventListener("change", aplicarFiltros);
+document.getElementById("filtroData").addEventListener("change", aplicarFiltros);
+document.getElementById("buscaGeral").addEventListener("input", aplicarFiltros);
 
 /* ============================================================
    MODAL APROVAÇÃO
