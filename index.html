@@ -828,7 +828,7 @@ function escapeHtml(s){
     .replaceAll("'","&#039;");
 }
 
-function aplicarFiltros() {
+function aplicarFiltros(resetPagina = true) {
   const nomeSel = document.getElementById("filtroNome").value;
   const eqpSel  = document.getElementById("filtroEquipamento").value;
   const aprov   = document.getElementById("filtroAprovacao").value;
@@ -859,7 +859,10 @@ function aplicarFiltros() {
     return okNome && okEqp && okAprov && okData && okGeral;
   });
 
-  paginaAtual = 1;
+  if (resetPagina) {
+    paginaAtual = 1;
+  }
+
   renderizar(filtrados);
 }
 
@@ -904,11 +907,11 @@ function aplicarFiltros() {
   });
 });
 
-document.getElementById("filtroNome").addEventListener("change", aplicarFiltros);
-document.getElementById("filtroEquipamento").addEventListener("change", aplicarFiltros);
-document.getElementById("filtroAprovacao").addEventListener("change", aplicarFiltros);
-document.getElementById("filtroData").addEventListener("change", aplicarFiltros);
-document.getElementById("buscaGeral").addEventListener("input", aplicarFiltros);
+document.getElementById("filtroNome").addEventListener("change", () => aplicarFiltros(true));
+document.getElementById("filtroEquipamento").addEventListener("change", () => aplicarFiltros(true));
+document.getElementById("filtroAprovacao").addEventListener("change", () => aplicarFiltros(true));
+document.getElementById("filtroData").addEventListener("change", () => aplicarFiltros(true));
+document.getElementById("buscaGeral").addEventListener("input", () => aplicarFiltros(true));
 
 let ensaioSelecionado = null;
 
@@ -923,25 +926,60 @@ function fecharModal() {
 
 async function salvarAprovacao() {
   const aprov = numeroAprovacao.value.trim();
-  if (!aprov) { alert("Digite o número de aprovação."); return; }
+  if (!aprov) {
+    alert("Digite o número de aprovação.");
+    return;
+  }
 
   const token = localStorage.getItem("token");
-  if(!token){ alert("Sessão expirada."); logout(); return; }
+  if (!token) {
+    alert("Sessão expirada.");
+    logout();
+    return;
+  }
 
-  const r = await fetch(`${API}/salvar-aprovacao`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer " + token
-    },
-    body: JSON.stringify({ id: ensaioSelecionado, aprovacao: aprov })
-  });
+  try {
+    const r = await fetch(`${API}/salvar-aprovacao`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token
+      },
+      body: JSON.stringify({ id: ensaioSelecionado, aprovacao: aprov })
+    });
 
-  const j = await r.json().catch(() => ({}));
-  if(!r.ok){ alert(j.error || "Erro ao salvar aprovação."); return; }
+    const j = await r.json().catch(() => ({}));
 
-  fecharModal();
-  carregar();
+    if (!r.ok) {
+      alert(j.error || "Erro ao salvar aprovação.");
+      return;
+    }
+
+    // ✅ atualiza localmente o ensaio aprovado
+    const index = ensaiosOriginais.findIndex(e => e.id === ensaioSelecionado);
+    if (index !== -1) {
+      ensaiosOriginais[index].aprovacao = aprov;
+    }
+
+    // ✅ recalcula próximo número
+    const anoAtual = new Date().getFullYear();
+    const numeros = ensaiosOriginais
+      .filter(e => e.aprovacao && String(e.aprovacao).includes("/"))
+      .map(e => Number(String(e.aprovacao).split("/")[0]))
+      .filter(n => !Number.isNaN(n));
+
+    const ultimo = numeros.length ? Math.max(...numeros) : 0;
+    proximoNumeroAprovacao = `${String(ultimo + 1).padStart(5, "0")}/${anoAtual}`;
+
+    fecharModal();
+
+    // ✅ reaplica filtros sem voltar para a primeira página
+    aplicarFiltros(false);
+
+    alert("Aprovação salva com sucesso!");
+  } catch (err) {
+    alert("Falha ao conectar no servidor.");
+  }
 }
 
 async function excluirEnsaio(id){
