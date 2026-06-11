@@ -194,10 +194,10 @@
   #appView{ display:none; }
 
   .filtros{
-    display:grid;
-    grid-template-columns: 1.2fr 1.2fr .9fr 1fr 1.4fr;
-    gap: 10px;
-    margin-bottom: 12px;
+  display:grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
   }
 
   .filtros input,
@@ -208,6 +208,18 @@
     border: 1px solid var(--border);
     width: 100%;
   }
+@media (max-width: 1200px){
+  .filtros{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (max-width: 980px){
+  .filtros{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 520px){
+  .filtros{ grid-template-columns: 1fr; }
+}
+
 
   .table-wrap{
     width:100%;
@@ -373,6 +385,7 @@
     td.actions-cell{ display:block; }
     td.actions-cell::before{ display:none; }
   }
+  
 </style>
 </head>
 
@@ -467,6 +480,12 @@
         </select>
 
         <input id="buscaGeral" placeholder="Busca inteligente (tudo)">
+
+        
+  <!-- NOVOS FILTROS -->
+  <input id="filtroCodigoInicial" type="number" placeholder="Código inicial">
+  <input id="filtroCodigoFinal" type="number" placeholder="Código final">
+
       </div>
 
       <div class="paginacao" id="paginacaoTopo">
@@ -835,6 +854,12 @@ function aplicarFiltros(resetPagina = true) {
   const geral   = (document.getElementById("buscaGeral").value || "").toLowerCase();
   const dataFiltro = document.getElementById("filtroData").value;
 
+  const codigoInicialFiltro = document.getElementById("filtroCodigoInicial").value.trim();
+  const codigoFinalFiltro   = document.getElementById("filtroCodigoFinal").value.trim();
+
+  const codBuscaInicial = codigoInicialFiltro === "" ? null : Number(codigoInicialFiltro);
+  const codBuscaFinal   = codigoFinalFiltro === "" ? null : Number(codigoFinalFiltro);
+
   const filtrados = ensaiosOriginais.filter(e => {
     let dataEnsaio = "";
     if (e.data) {
@@ -856,7 +881,43 @@ function aplicarFiltros(resetPagina = true) {
     const okData = (dataFiltro === "" || dataEnsaio === dataFiltro);
     const okGeral = !geral || JSON.stringify(e).toLowerCase().includes(geral);
 
-    return okNome && okEqp && okAprov && okData && okGeral;
+    // intervalo do ensaio
+    const codInicialEnsaio = Number(e.cod_inicial);
+    const codFinalEnsaio   = Number(e.cod_final);
+
+    let okCodigo = true;
+
+    // se digitou só o código inicial -> trata como busca de código único
+    if (codBuscaInicial !== null && codBuscaFinal === null) {
+      okCodigo =
+        !Number.isNaN(codInicialEnsaio) &&
+        !Number.isNaN(codFinalEnsaio) &&
+        codBuscaInicial >= codInicialEnsaio &&
+        codBuscaInicial <= codFinalEnsaio;
+    }
+
+    // se digitou só o código final -> também trata como código único
+    if (codBuscaInicial === null && codBuscaFinal !== null) {
+      okCodigo =
+        !Number.isNaN(codInicialEnsaio) &&
+        !Number.isNaN(codFinalEnsaio) &&
+        codBuscaFinal >= codInicialEnsaio &&
+        codBuscaFinal <= codFinalEnsaio;
+    }
+
+    // se digitou os dois -> busca por interseção de intervalo
+    if (codBuscaInicial !== null && codBuscaFinal !== null) {
+      const inicioBusca = Math.min(codBuscaInicial, codBuscaFinal);
+      const fimBusca = Math.max(codBuscaInicial, codBuscaFinal);
+
+      okCodigo =
+        !Number.isNaN(codInicialEnsaio) &&
+        !Number.isNaN(codFinalEnsaio) &&
+        codInicialEnsaio <= fimBusca &&
+        codFinalEnsaio >= inicioBusca;
+    }
+
+    return okNome && okEqp && okAprov && okData && okGeral && okCodigo;
   });
 
   if (resetPagina) {
@@ -912,6 +973,10 @@ document.getElementById("filtroEquipamento").addEventListener("change", () => ap
 document.getElementById("filtroAprovacao").addEventListener("change", () => aplicarFiltros(true));
 document.getElementById("filtroData").addEventListener("change", () => aplicarFiltros(true));
 document.getElementById("buscaGeral").addEventListener("input", () => aplicarFiltros(true));
+  
+document.getElementById("filtroCodigoInicial").addEventListener("input", () => aplicarFiltros(true));
+document.getElementById("filtroCodigoFinal").addEventListener("input", () => aplicarFiltros(true));
+
 
 let ensaioSelecionado = null;
 
