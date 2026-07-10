@@ -1139,7 +1139,16 @@ async function gerarPDF(eEncoded) {
 
   doc.setFont("Helvetica", "bold");
   doc.setFontSize(16);
-  doc.text("LAUDO DE ENSAIO DIELÉTRICO", pageWidth / 2, 16, { align: "center" });
+  let titulo = "LAUDO DE ENSAIO DIELÉTRICO";
+
+if (
+    e.tipo_ensaio === "Tensão Aplicada 40KV C.A por 1 min" &&
+    e.subestacao
+) {
+    titulo += " - SUBESTAÇÃO " + e.subestacao.toUpperCase();
+}
+
+doc.text(titulo, pageWidth / 2, 16, { align: "center" });
 
   let y = 30;
   const inicioBlocoY = y;
