@@ -1151,10 +1151,22 @@ if (
 
 doc.text(titulo, pageWidth / 2, 16, { align: "center" });
 
- let y = 30;
+let y = 36;
 const inicioBlocoY = y;
 
-const departamento = e.departamento || "";
+const dadosLaudo = [
+    ["Laudo", "EPB/EBO"],
+    ["Certificado nº", e.aprovacao],
+    ["Mês do Ensaio", e.mes],
+    ["Regional", e.regional],
+    ["Localidade", e.localidade],
+    ["Departamento", e.departamento]
+];
+
+// Adiciona somente se existir subestação
+if (e.subestacao && e.subestacao.trim() !== "") {
+    dadosLaudo.push(["Subestação", e.subestacao]);
+}
 
 doc.autoTable({
     startY: inicioBlocoY,
@@ -1166,15 +1178,7 @@ doc.autoTable({
         cellPadding: 2,
         valign: "middle"
     },
-    body: [
-        ["Laudo", "EPB/EBO"],
-        ["Certificado nº", e.aprovacao],
-        ["Mês do Ensaio", e.mes],
-        ["Regional", e.regional],
-        ["Localidade", e.localidade],
-        ["Departamento", e.departamento]
-        ["Subestação", e.subestacao]
-    ]
+    body: dadosLaudo
 });
 
 const laudoFimY = doc.lastAutoTable.finalY;
