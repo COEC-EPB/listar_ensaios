@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+
+-<!DOCTYPE html>
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
@@ -1159,15 +1160,33 @@ doc.text(titulo, pageWidth / 2, 16, { align: "center" });
     margin: { left: 14 },
     head: [["Laudo", "Valor"]],
     styles: { fontSize: 9 },
-    body: [
-      ["Laudo", "EPB/EBO"],
-      ["Certificado nº", e.aprovacao],
-      ["Mês do Ensaio", e.mes],
-      ["Regional", e.regional],
-      ["Localidade", e.localidade],
-      ["Departamento", e.departamento]
-    ]
-  });
+    const departamento =
+  e.departamento || "";
+
+const valorDepartamento =
+  e.subestacao
+    ? `${departamento}\nSubestação: ${e.subestacao}`
+    : departamento;
+
+doc.autoTable({
+  startY: inicioBlocoY,
+  tableWidth: 120,
+  margin: { left: 14 },
+  head: [["Laudo", "Valor"]],
+  styles: {
+    fontSize: 9,
+    cellPadding: 2,
+    valign: "middle"
+  },
+  body: [
+    ["Laudo", "EPB/EBO"],
+    ["Certificado nº", e.aprovacao],
+    ["Mês do Ensaio", e.mes],
+    ["Regional", e.regional],
+    ["Localidade", e.localidade],
+    ["Departamento", valorDepartamento]
+  ]
+});
 
   const laudoFimY = doc.lastAutoTable.finalY;
 
